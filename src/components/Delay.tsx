@@ -1,12 +1,12 @@
 import React from 'react';
 
-import AudioGraphGainModule from './classes/GainModule';
+import DelayModule from './classes/DelayModule';
 import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
-import './css/gain.css'
+//import './css/delay.css'
 
-type GainPropsType = {
+type DelayPropsType = {
 
     //standard props
     children?: any,
@@ -14,25 +14,23 @@ type GainPropsType = {
     target?: any,
 
     //component specific
-    value?: number,
-    targetValue?: number,
-    duration?: number
+    delayTime?: number,
 }
 
-export default (props: GainPropsType) => {
+export default (props: DelayPropsType) => {
 
     let children = null;
 
     if(props.context){
         
-        const proxy = new AudioGraphGainModule(
+        const proxy = new DelayModule(
             props.target,
             props.context,
             paramsFromProps(props)
         );
 
-        props.target.registerSource(proxy);
-        
+        proxy.target.registerSource(proxy);
+
         children = renderChildren(props.children, {
             context: props.context,
             target: proxy
@@ -41,7 +39,7 @@ export default (props: GainPropsType) => {
     }
     
     return (
-        <div className="gain">
+        <div className="delay">
             {children}
         </div>
     );

@@ -1,12 +1,12 @@
 import React from 'react';
 
-import AudioGraphGainModule from './classes/GainModule';
+import ConstantModule from './classes/ConstantModule';
 import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
 import './css/gain.css'
 
-type GainPropsType = {
+type ConstantPropsType = {
 
     //standard props
     children?: any,
@@ -14,18 +14,17 @@ type GainPropsType = {
     target?: any,
 
     //component specific
-    value?: number,
-    targetValue?: number,
-    duration?: number
+    value: number
+
 }
 
-export default (props: GainPropsType) => {
+export default (props: ConstantPropsType) => {
 
     let children = null;
 
     if(props.context){
         
-        const proxy = new AudioGraphGainModule(
+        const proxy = new ConstantModule(
             props.target,
             props.context,
             paramsFromProps(props)

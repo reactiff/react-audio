@@ -1,12 +1,12 @@
 import React from 'react';
 
-import AudioGraphGainModule from './classes/GainModule';
+import ParamModule, {TransitionMethod} from './classes/ParamModule';
 import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
 import './css/gain.css'
 
-type GainPropsType = {
+type ParamPropsType = {
 
     //standard props
     children?: any,
@@ -14,25 +14,31 @@ type GainPropsType = {
     target?: any,
 
     //component specific
-    value?: number,
-    targetValue?: number,
-    duration?: number
+    for: string,
+
+    value?: number, 
+    curve?: any[], 
+    
+    delay?: number,
+
+    method?: TransitionMethod
+    duration?: number,
 }
 
-export default (props: GainPropsType) => {
+export default (props: ParamPropsType) => {
 
     let children = null;
 
     if(props.context){
         
-        const proxy = new AudioGraphGainModule(
+        const proxy = new ParamModule(
             props.target,
             props.context,
             paramsFromProps(props)
         );
 
-        props.target.registerSource(proxy);
-        
+        proxy.target.registerSource(proxy);
+
         children = renderChildren(props.children, {
             context: props.context,
             target: proxy
@@ -41,7 +47,7 @@ export default (props: GainPropsType) => {
     }
     
     return (
-        <div className="gain">
+        <div className="param">
             {children}
         </div>
     );

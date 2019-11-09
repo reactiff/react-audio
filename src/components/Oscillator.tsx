@@ -10,8 +10,6 @@ type OscillatorType = {
     context?: AudioContext,
     target?: any,
 
-    registerAudioNode?: {(source: any): void}
-
     type: any,
     frequency: number,
     duration: number
@@ -19,47 +17,80 @@ type OscillatorType = {
 
 export default (props: OscillatorType) => {
 
-    console.log('Render <Oscillator>');
-
-    // The setup occurs when react component renders
-
+    
     if(props.context){
 
-        let oscillator: OscillatorNode | null = null;
+        let audioEndpoint: OscillatorNode | null = null;
         
+        let inputEndpoints:any[] = [];
+
+        const params = {
+            type: props.type,
+            frequency: props.frequency,
+            duration: props.duration
+        };
+
+        const getDescription = () => {
+            return `${props.type}(${props.frequency}) ${props.duration}s`;
+        }
+
         const oscillatorNode = {
+
+            $type: 'OscillatorProxy',
+            $params: params,
+
+            getEndPoints: () => {
+                if(audioEndpoint){
+                    return [audioEndpoint];
+                }
+                else{
+                    return inputEndpoints;
+                }
+            },
+
             init: async () => {
                 return new Promise((resolve)=>{
-                    oscillator = props.context!.createOscillator();
-                    oscillator.type = props.type;
+                    audioEndpoint = props.context!.createOscillator();
+                    audioEndpoint.type = props.type;
+                    
+                    console.log(getDescription() + ' initialized');
+
                     resolve();
                 })
             },
+            
             receive: (source: any) => {
-                source.connect(oscillator);
+                source.connect(oscillatorNode);
             },
+            
             connect: async () => {
-                return new Promise((resolve)=>{
-                    props.target.receive(oscillator)
+                return new Promise(async (resolve)=>{
+                    await props.target.receive(oscillatorNode)
                     resolve();
                 })
             },
-            trigger: async (time: number) => {
-                oscillator!.frequency.setValueAtTime(props.frequency, time)
-                oscillator!.start(time);
-                oscillator!.stop(time + props.duration);
-            }
+            
+            start: async (time: number) => {
+
+                console.log(' (start) @' + time + ' : ' + getDescription());
+
+                audioEndpoint!.frequency.setValueAtTime(props.frequency, time)
+                audioEndpoint!.start(time);
+                audioEndpoint!.stop(time + props.duration);
+            },
+
+            getDescription: getDescription
         }
     
-        if(props.registerAudioNode){
-            props.registerAudioNode(oscillatorNode);
-        }
+        props.target.registerSource(oscillatorNode);
+        
     }
     
-    //Doesn't render anything ?
     return (
+
         <div className="oscillator">
             {props.frequency}
         </div>
+
     );
 }
