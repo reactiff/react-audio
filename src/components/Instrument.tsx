@@ -5,47 +5,50 @@ import AudioNode from './AudioNode'
 import renderChildren from './renderChildren'
 
 import './css/instrument.css'
+import AudioGraphInstrumentModule from './classes/InstrumentModule';
   
 export default (props: any) => {
 
-    console.log('Render <Instrument>');
+    // console.log('Render <Instrument>');
 
     let children = null;
 
+    let proxy: AudioGraphInstrumentModule | null = null;
+
     if(props.context) { 
     
-        const sources:any[] = [];
+        proxy = new AudioGraphInstrumentModule(
+            props.target,
+            props.context,
+            {
+                name: props.name || 'Unnamed instrument'
+            }
+        );
 
-        const registerAudioNode = (source: any)  => {
-            sources.push(source);
-        }
+        props.target.registerSource(proxy);
+        
+        children = renderChildren(props.children, {
+            context: props.context,
+            target: proxy
+        })   
+
+    }
     
-        const handleTrigger = async () => {
+    let triggerButton = null;
 
-            console.log('Init, Connect, Trigger!');
-   
-            await Promise.all(sources.map(source => source.init()));
-            await Promise.all(sources.map(source => source.connect()));
+    if(props.context) {
+         triggerButton = (
+            <div key="-1" className="trigger" onMouseDown={()=> {
+                //console.clear();
 
-            const time  = props.context.currentTime;
-            await Promise.all(sources.map(source => source.trigger(time)));
+                proxy!.context.resume();
 
-        }
-
-        const triggerButton = (
-            <div key="-1" className="trigger" onMouseDown={()=>handleTrigger()} >
+                proxy!.trigger();
+            }}>
                 <div className="button play"></div>
             </div>
         )
-
-        children = [triggerButton].concat(renderChildren(props.children, {
-            context: props.context,
-            target: props.target, // patch thru to parent 
-            registerAudioNode: registerAudioNode
-        }))
     }
-    
-    
 
     return (
 
@@ -53,9 +56,9 @@ export default (props: any) => {
 
             <div className="instrument">
                 
-                {
-                    children
-                }
+                {triggerButton}
+
+                {children}
                 
             </div>
 

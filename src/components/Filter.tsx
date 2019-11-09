@@ -1,12 +1,12 @@
 import React from 'react';
 
-import AudioGraphGainModule from './classes/GainModule';
+import FilterModule, {FilterType} from './classes/FilterModule';
 import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
 import './css/gain.css'
 
-type GainPropsType = {
+type FilterPropsType = {
 
     //standard props
     children?: any,
@@ -14,25 +14,29 @@ type GainPropsType = {
     target?: any,
 
     //component specific
-    value?: number,
-    targetValue?: number,
-    duration?: number
+    frequency?: number,
+    detune?: number,
+    Q?: number,
+    gain?: number,
+
+    type?: FilterType
+    
 }
 
-export default (props: GainPropsType) => {
+export default (props: FilterPropsType) => {
 
     let children = null;
 
     if(props.context){
         
-        const proxy = new AudioGraphGainModule(
+        const proxy = new FilterModule(
             props.target,
             props.context,
             paramsFromProps(props)
         );
 
-        props.target.registerSource(proxy);
-        
+        proxy.target.registerSource(proxy);
+
         children = renderChildren(props.children, {
             context: props.context,
             target: proxy
@@ -41,7 +45,7 @@ export default (props: GainPropsType) => {
     }
     
     return (
-        <div className="gain">
+        <div className="filter">
             {children}
         </div>
     );
