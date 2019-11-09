@@ -16,8 +16,8 @@ type AnalyzerType = {
     //specific
     type: any
 
-    width: number
-    height: number
+    width?: number
+    height?: number
 
     dcOffset?: number
     scale?: number
@@ -25,9 +25,18 @@ type AnalyzerType = {
     rotate90?: boolean
     sizeX?: number
     sizeY?: number
-    trace?: boolean
+    traces?: boolean
+    color?: string
 
     onClick?: (analyzer: any) => void
+}
+
+const paramDefaults = {
+    width: 200,
+    height: 100,
+    traces: "f",
+    rotate90: false,
+    color: "white"
 }
 
 export default (props: AnalyzerType) => {
@@ -39,9 +48,11 @@ export default (props: AnalyzerType) => {
             
         const canvasRef: any = React.createRef();
 
+        const params = paramsFromProps(props, {canvasRef: canvasRef}, paramDefaults);
+
         const style={
-            width: props.width / 2,
-            height: props.height / 2
+            width: params.width / 2,
+            height: params.height / 2
         };
 
         canvas = (<canvas ref={canvasRef} className="analyzer" width={props.width} height={props.height} style={style}></canvas>)
@@ -49,7 +60,7 @@ export default (props: AnalyzerType) => {
         proxy = new AnalyzerModule(
             props.target,
             props.context,
-            paramsFromProps(props, {canvasRef: canvasRef})
+            params
         );
 
         props.target.registerListener(proxy);

@@ -15,13 +15,17 @@ export default (props: any) => {
 
     let proxy: AudioGraphInstrumentModule | null = null;
 
+    let title: string = '';
+
     if(props.context) { 
     
+        title = props.name || 'Unnamed instrument';
+        
         proxy = new AudioGraphInstrumentModule(
             props.target,
             props.context,
             {
-                name: props.name || 'Unnamed instrument'
+                name: title
             }
         );
 
@@ -56,6 +60,8 @@ export default (props: any) => {
 
             <div className="instrument">
                 
+                {title}
+
                 {triggerButton}
 
                 {children}

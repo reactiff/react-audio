@@ -4,7 +4,7 @@ const standardKeys: any = {
     children: true
 }
 
-export default (props:any, additionalProps?:any) => {
+export default (props:any, additionalProps?:any, defaults?: any) => {
 
     const params:any = {};
 
@@ -12,11 +12,19 @@ export default (props:any, additionalProps?:any) => {
         if(!standardKeys[key]){
             params[key] = props[key];
         }
-        
     }
 
     if(additionalProps){
         Object.assign(params, additionalProps);
+    }
+
+    //defaults
+    if(defaults){
+        for(let defaultKey in defaults){
+            if(!params.hasOwnProperty(defaultKey)){
+                params[defaultKey] = defaults[defaultKey];
+            }
+        }    
     }
     
     return params;
