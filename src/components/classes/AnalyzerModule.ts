@@ -64,6 +64,7 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
 
         const timeAxisSize = proxy.$params.sizeX || w;
         const magAxisSize = proxy.$params.sizeY || h;
+        let magAxisZero = h / 2;
 
         let clearRect = {
             x: 0,
@@ -71,6 +72,9 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
             w: w,
             h: h
         };
+
+        let clearStyle = "";
+
         
         if(proxy.$params.onClick){
             proxy.$params.canvasRef.current.addEventListener('click', (e:any) => {
@@ -85,10 +89,10 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
 
         //ctx.scale(2,2)
         // ctx.translate(0.5, 0.5);
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
 
         ctx.fillStyle = "#000000";
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = proxy.$params.color || 'white';
 
         if(proxy.$params.rotate90){
             ctx.translate(w/2, h/2);
@@ -99,17 +103,22 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
             clearRect.y = -(w-magAxisSize);
             clearRect.w = h;
             clearRect.h = w + (w-magAxisSize);
+
+            magAxisZero = magAxisSize / 2
         }
 
         ctx.clearRect(clearRect.x, clearRect.y, clearRect.w, clearRect.h);
         
+        
         if(proxy.$params.traces){
-            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            clearStyle = "rgba(0,0,0,0.15)";
         }
         else{
-            ctx.fillStyle = "rgba(0,0,0,1)";
+            clearStyle = "rgba(0,0,0,1)";
         }
         
+        ctx.fillStyle = clearStyle;
+
         let drawCount = 0;
 
         if(proxy.$params.type === 'wave'){
@@ -163,12 +172,12 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
                 ctx.strokeStyle = "rgba(0,255,0,0.5)";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(0, magAxisSize/2);
-                ctx.lineTo(timeAxisSize, magAxisSize/2);
+                ctx.moveTo(0, magAxisZero);
+                ctx.lineTo(timeAxisSize, magAxisZero);
                 ctx.stroke();
 
 
-                ctx.strokeStyle = "#ffffff";
+                ctx.strokeStyle = proxy.$params.color || 'white';
                 ctx.lineWidth = 2;
 
                 ctx.beginPath();
@@ -178,7 +187,7 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
                     //const y = waveform[i] * h;
 
                     //from byte
-                    const y = magAxisSize - (getY(waveform[i]) * magAxisSize + magAxisSize/2);
+                    const y = magAxisZero - (getY(waveform[i]) * magAxisSize);
             
                     if(i == 0) {
                         ctx.moveTo(x, y);
@@ -194,23 +203,21 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
         }
         else if(proxy.$params.type === 'bar'){
 
-            proxy.audioEndpoint.fftSize = 1024;
+            proxy.audioEndpoint.fftSize = 128;
             
-            //var freqData = new Uint8Array(bufferLength);
-            var freqData = new Float32Array(proxy.bufferLength);
+            var freqData = new Uint8Array(proxy.bufferLength);
+            //var freqData = new Float32Array(proxy.bufferLength);
 
             const updateFrequencyData = () => {
                 requestAnimationFrame(updateFrequencyData);
-                proxy.audioEndpoint.getFloatFrequencyData(freqData);
+                //proxy.audioEndpoint.getFloatFrequencyData(freqData);
+                proxy.audioEndpoint.getByteFrequencyData(freqData);
             }
             const drawBarGraph = () => {
 
                 requestAnimationFrame(drawBarGraph);
 
-                
-                
-
-                ctx.fillStyle = "#000000";
+                ctx.fillStyle = clearStyle;
                 ctx.fillRect(0, 0, w, h);
                 
                 let minFreq = -1;
@@ -254,12 +261,17 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
                     //     gotdata=true;
                     // }
 
-                    const color = Math.min(barVal, 255);
+                    if(barVal>220){
+                        ctx.fillStyle = 'rgb('+Math.min(barVal, 255)*0.8  +',0,0)';
+                    }
+                    else{
+                        ctx.fillStyle = 'rgb(0,'+Math.min(barVal, 255)+',0)';
+                    }
 
                     const x = colWidth * (i - minFreq) + colMargin;
                     const y = h - (barHeight);
 
-                    ctx.fillStyle = 'rgb(0,'+color+','+color+')';
+                    
                     ctx.fillRect(x, y, barWidth, barHeight);
             
                     // if(gotdata){

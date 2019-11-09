@@ -42,7 +42,9 @@ class ParamModule extends BaseAudioGraphNodeModule {
 
                 if(params.value){
 
-                    if(params.duration){
+                    p.setValueAtTime(params.value, time + (params.delay || 0));
+
+                    if(params.targetValue && params.duration){
 
                         const method = params.method || TransitionMethod.Linear;
 
@@ -50,7 +52,7 @@ class ParamModule extends BaseAudioGraphNodeModule {
 
                             case TransitionMethod.Target:
                                 p.setTargetAtTime(
-                                    params.value, 
+                                    params.targetValue, 
                                     time + (params.delay || 0),
                                     (params.duration || 0)
                                 );
@@ -58,25 +60,22 @@ class ParamModule extends BaseAudioGraphNodeModule {
 
                             case TransitionMethod.Exponential:
                                 p.exponentialRampToValueAtTime(
-                                    params.value, 
-                                    time + (params.duration || 0)    
+                                    params.targetValue, 
+                                    time + (params.delay || 0) + (params.duration || 0)    
                                 );
                                 break;
 
                             default: //TransitionMethod.Linear
                                 p.linearRampToValueAtTime(
-                                    params.value, 
-                                    time + (params.duration || 0)    
+                                    params.targetValue, 
+                                    time + (params.delay || 0) + (params.duration || 0)    
                                 );
                                 break;
 
                         }
 
                     }
-                    else{
-                        p.setValueAtTime(params.value, time + (params.delay || 0));
-                    }
-
+                    
                     
                 }
                 else if(params.curve) {

@@ -6,6 +6,8 @@ import paramsFromProps from './paramsFromProps'
 
 import './css/gain.css'
 
+
+
 type ParamPropsType = {
 
     //standard props
@@ -15,12 +17,12 @@ type ParamPropsType = {
 
     //component specific
     for: string,
-
-    value?: number, 
+    
+    value?: number,
+    targetValue?: number,
     curve?: any[], 
     
     delay?: number,
-
     method?: TransitionMethod
     duration?: number,
 }

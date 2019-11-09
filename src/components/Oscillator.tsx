@@ -1,7 +1,9 @@
 import React from 'react';
 
+import OscillatorModule from './classes/OscillatorModule';
 import renderChildren from './renderChildren'
-  
+import paramsFromProps from './paramsFromProps'
+
 import './css/oscillator.css'
 
 type OscillatorType = {
@@ -16,8 +18,35 @@ type OscillatorType = {
 }
 
 export default (props: OscillatorType) => {
+   
+    let children = null;
 
+    if(props.context){
+        
+        const proxy = new OscillatorModule(
+            props.target,
+            props.context,
+            paramsFromProps(props)
+        );
+
+        props.target.registerSource(proxy);
+        
+        children = renderChildren(props.children, {
+            context: props.context,
+            target: proxy
+        })   
+
+    }
     
+    return (
+        <div className="oscillator">
+            {children}
+        </div>
+    );
+
+
+    /*
+
     if(props.context){
 
         let audioEndpoint: OscillatorNode | null = null;
@@ -93,4 +122,7 @@ export default (props: OscillatorType) => {
         </div>
 
     );
+
+    */
+   
 }

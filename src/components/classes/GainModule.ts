@@ -25,13 +25,14 @@ class GainModule extends BaseAudioGraphNodeModule {
 
                 console.log(' (start) @' + time + ' : ' + proxy.getDescription());
 
-                const count = proxy.sources.length || 1;
+                //const count = proxy.sources.length || 1;
 
                 const value = params.value || params.startValue || 1;
 
-                const attenuatedStart = count > 1 ? 
-                    value / count : 
-                    value;
+                // const attenuatedStart = count > 1 ? 
+                //     value / count : 
+                //     value;
+                const attenuatedStart = value;
                 
                 proxy.audioEndpoint.gain.setValueAtTime(attenuatedStart, 
                     time);
@@ -40,14 +41,16 @@ class GainModule extends BaseAudioGraphNodeModule {
                 const targetValue = params.targetValue || params.endValue;
                 if(targetValue){
 
-                    const attenuatedEnd = count > 1 ? 
-                        targetValue / count : 
-                        targetValue;
+                    // const attenuatedEnd = count > 1 ? 
+                    //     targetValue / count : 
+                    //     targetValue;
 
-                    const duration = proxy.params.duration || 0;
+                    const attenuatedEnd = targetValue;
+
+                    const duration = proxy.$params.duration || 0;
 
                     proxy.audioEndpoint.gain.exponentialRampToValueAtTime(attenuatedEnd, 
-                        time + proxy.$params.duration);
+                        time + duration);
 
                 }
                 
