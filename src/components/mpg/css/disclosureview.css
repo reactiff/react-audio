@@ -1,0 +1,51 @@
+ /* chat.js */
+
+ /* MAIN CONTAINER */
+ .disclosure-view-container {
+    position: fixed;
+    top: 55px;
+    bottom: 86px;
+    left: 100%;
+    width: 100vw;
+    
+}
+
+.disclosure-view-relative-container {
+    position: relative;
+    /* background-color: rgba(0,128,0,0.5); */
+    padding: 0px;
+    width: 100%;
+    height: 100%; 
+}
+
+/* CHAT HEADER */
+.disclosure-view-header {
+    position: absolute;
+    padding: 5px;
+    top: 0;
+    left:0;
+    height: 45px;
+    width: 100%;
+    background-color: #333;
+}
+
+.disclosure-view-body {
+    position: absolute;
+    padding-top: 15px;
+    padding-bottom: 50px;
+    top: 45px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 45px);
+    background-color:white;
+}
+
+
+@media only screen and (min-width: 768px) {
+    .disclosure-view-container {
+        top: 55px;
+        bottom: 0px;
+    }
+}
+
+

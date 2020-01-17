@@ -1,7 +1,7 @@
 import React from 'react';
 
-import Instrument from './Instrument'
-import renderChildren from './renderChildren'
+import Instrument from './webaudio/Instrument'
+import renderChildren from './webaudio/renderChildren'
 
 import './css/instrument.css'
 

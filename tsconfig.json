@@ -20,6 +20,8 @@
     "jsx": "react"
   },
   "include": [
-    "src", "public/scripts/id3reader.js"
+    "src", 
+    "src/**/*",
+    "public/scripts/id3reader.js"
   ]
 }

@@ -1,0 +1,22 @@
+/* accordion.css */
+/* .nav-pills {
+    margin-bottom: 15px;
+}
+
+.nav-pills .nav-link {
+    padding: 0px 5px;
+    font-size: 0.8em;
+}
+ */
+
+
+
+.mpg-accordion .card-header {
+    cursor: pointer;
+    padding: 5px 15px;
+}
+
+.mpg-accordion .card-body {
+    padding-top: 1px;
+    padding-bottom: 15px;
+}
