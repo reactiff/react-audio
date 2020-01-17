@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-
-import AudioNode from './AudioNode'
-
-import renderChildren from './renderChildren'
-
+import AudioNode from './webaudio/AudioNode'
+import renderChildren from './webaudio/renderChildren'
 import './css/instrument.css'
-import AudioGraphInstrumentModule from './classes/InstrumentModule';
-  
-export default (props: any) => {
+import AudioGraphInstrumentModule from './webaudio/modules/InstrumentModule';
 
-    // console.log('Render <Instrument>');
+
+
+export default (props: any) => {
+    
 
     let children = null;
 
@@ -25,10 +23,23 @@ export default (props: any) => {
             props.target,
             props.context,
             {
-                name: title
+                name: title,
+                signalSource: props.signalSource,
+                autoRelease: props.autoRelease,
+                duration: props.duration,
             }
         );
 
+        proxy.binding = props.binding;
+        proxy.autoRelease = props.autoRelease;
+
+        //register as Instrument with Transport
+        if(props.target.findParent){
+            const parent = props.target.findParent('Transport');
+            parent.registerInstrument(proxy);
+        }
+        
+        //register as Source
         props.target.registerSource(proxy);
         
         children = renderChildren(props.children, {
@@ -39,35 +50,35 @@ export default (props: any) => {
     }
     
     let triggerButton = null;
+    let triggerKey = null;
+
+    const trigger = (e: any)=> {
+
+        proxy!.trigger()
+
+    }
 
     if(props.context) {
+
          triggerButton = (
-            <div key="-1" className="trigger" onMouseDown={()=> {
-                //console.clear();
-
-                proxy!.context.resume();
-
-                proxy!.trigger();
-            }}>
-                <div className="button play"></div>
+            <div key="-1" className="trigger">
+                <div className="buttons">
+                    <div className="button play" onMouseDown={trigger}></div>
+                </div>
             </div>
         )
+
     }
 
     return (
 
         <AudioNode>
-
             <div className="instrument">
-                
                 {title}
-
+                {triggerKey}
                 {triggerButton}
-
                 {children}
-                
             </div>
-
         </AudioNode>
     )
 }

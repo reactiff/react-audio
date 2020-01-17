@@ -1,0 +1,34 @@
+/* p {
+    font-family: "Raleway", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+} */
+
+body {
+    font-size: 0.875rem;
+}
+
+code, pre.code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+      monospace;
+
+    white-space: pre-wrap;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: Teko;
+    margin: 0;
+}
+
+/* BOOTSTRAP RESTYLING */
+span.badge {
+    font-weight: 400;
+}
+
+input, select, textarea {
+    font-size: 0.875rem !important;
+}
+
+.btn-link {
+    font-size: 0.875rem;
+}
