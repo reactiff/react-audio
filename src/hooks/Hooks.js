@@ -64,6 +64,27 @@ export const useBootstrapGridSizeValue = () => {
     return map[size]
 }
 
+export const useWindowWidth = () => {
+
+    const [width, setWidth] = useState(window.innerWidth)
+
+    useEffect(() => {
+
+        if (!isClient) return false
+        
+        const handleResize = () => {
+            setWidth(window.innerWidth)
+        }
+
+        window.addEventListener('resize', handleResize)
+
+        return () => window.removeEventListener('resize', handleResize)
+
+    }, [])
+
+    return width
+}
+
 export const useWindowHeight = () => {
 
     const [height, setHeight] = useState(window.innerHeight)
@@ -83,6 +104,31 @@ export const useWindowHeight = () => {
     }, [])
 
     return height
+}
+
+export const useWindowSize = () => {
+
+    const [size, setSize] = useState({width: window.innerWidth, height: window.innerHeight})
+
+    useEffect(() => {
+
+        if (!isClient) return false
+        
+        const handleResize = () => {
+
+            window.requestAnimationFrame(() => {
+                setSize({width: window.innerWidth, height: window.innerHeight})
+            });
+            
+        }
+
+        window.addEventListener('resize', handleResize)
+
+        return () => window.removeEventListener('resize', handleResize)
+
+    }, [])
+
+    return size
 }
 
 export const useScrollPosition = () => {

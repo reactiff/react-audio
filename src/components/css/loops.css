@@ -1,0 +1,45 @@
+.loop-panel {
+    position: fixed;
+    top: 55px;
+    bottom: 0px;
+    width: 100%;
+}
+
+.loop-wheel-container {
+    position: relative;
+}
+
+.loop-wheel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+}
+
+.loop-wheel > svg{
+    position: absolute;
+}
+
+.loop-wheel > svg > path.segment{
+    stroke-width: 1px;
+}
+
+
+/* BUTTONS */
+.loop-panel .toolbar .button {
+    cursor: pointer;
+    z-index: 9999;
+}
+
+.loop-panel .toolbar .repeat-indicator {
+    line-height: 0.9;
+    font-size: 2rem;
+    color: rgba(255,255,225,0.2);
+}
+
+.current-measure {
+    white-space: nowrap;
+}
+

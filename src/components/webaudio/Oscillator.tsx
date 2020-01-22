@@ -68,10 +68,12 @@ export default (props: OscillatorType) => {
                 {
                     <h2>
                         {
+                            props.frequency &&
                             !props.prime &&
                             props.frequency.toFixed(1)
                         }
                         {
+                            props.frequency &&
                             props.prime &&
                             props.frequency.toFixed(0)
                         }

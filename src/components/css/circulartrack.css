@@ -1,0 +1,8 @@
+.segment {
+    transform-origin: center;
+    cursor: pointer;
+    stroke: rgba(0,0,0,0.2);
+    /* stroke: green; */
+    stroke-width: 2px;
+    fill: rgba(0,0,0,0.2);
+}
