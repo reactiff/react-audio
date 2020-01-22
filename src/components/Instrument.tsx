@@ -9,76 +9,79 @@ import AudioGraphInstrumentModule from './webaudio/modules/InstrumentModule';
 export default (props: any) => {
     
 
-    let children = null;
+    // let children = null;
 
-    let proxy: AudioGraphInstrumentModule | null = null;
+    // let proxy: AudioGraphInstrumentModule | null = null;
 
-    let title: string = '';
+    // let title: string = '';
 
-    if(props.context) { 
+    // if(props.context) { 
     
-        title = props.name || 'Unnamed instrument';
+    //     title = props.name || 'Unnamed instrument';
         
-        proxy = new AudioGraphInstrumentModule(
-            props.target,
-            props.context,
-            {
-                name: title,
-                signalSource: props.signalSource,
-                autoRelease: props.autoRelease,
-                duration: props.duration,
-            }
-        );
+    //     proxy = new AudioGraphInstrumentModule(
+    //         props.target,
+    //         props.context,
+    //         {
+    //             name: title,
+    //             signalSource: props.signalSource,
+    //             autoRelease: props.autoRelease,
+    //             duration: props.duration,
+    //             trackIndex: props.trackIndex,
+    //         }
+    //     );
 
-        proxy.binding = props.binding;
-        proxy.autoRelease = props.autoRelease;
-
-        //register as Instrument with Transport
-        if(props.target.findParent){
-            const parent = props.target.findParent('Transport');
-            parent.registerInstrument(proxy);
-        }
         
-        //register as Source
-        props.target.registerSource(proxy);
-        
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
 
-    }
+    //     proxy.binding = props.binding;
+    //     proxy.autoRelease = props.autoRelease;
+
+    //     //register as Instrument with Transport
+    //     if(props.target.findParent){
+    //         const parent = props.target.findParent('Transport');
+    //         parent.registerInstrument(proxy);
+    //     }
+        
+    //     //register as Source
+    //     props.target.registerSource(proxy);
+        
+    //     children = renderChildren(props.children, {
+    //         context: props.context,
+    //         target: proxy
+    //     })   
+
+    // }
     
-    let triggerButton = null;
-    let triggerKey = null;
+    // let triggerButton = null;
+    // let triggerKey = null;
 
-    const trigger = (e: any)=> {
+    // const trigger = (e: any)=> {
 
-        proxy!.trigger()
+    //     proxy!.trigger()
 
-    }
+    // }
 
-    if(props.context) {
+    // if(props.context) {
 
-         triggerButton = (
-            <div key="-1" className="trigger">
-                <div className="buttons">
-                    <div className="button play" onMouseDown={trigger}></div>
-                </div>
-            </div>
-        )
+    //      triggerButton = (
+    //         <div key="-1" className="trigger">
+    //             <div className="buttons">
+    //                 <div className="button play" onMouseDown={trigger}></div>
+    //             </div>
+    //         </div>
+    //     )
 
-    }
+    // }
 
-    return (
+    // return (
 
-        <AudioNode>
-            <div className="instrument">
-                {title}
-                {triggerKey}
-                {triggerButton}
-                {children}
-            </div>
-        </AudioNode>
-    )
+    //     <AudioNode>
+    //         <div className="instrument">
+    //             {title}
+    //             {triggerKey}
+    //             {triggerButton}
+    //             {children}
+    //         </div>
+    //     </AudioNode>
+    // )
 }

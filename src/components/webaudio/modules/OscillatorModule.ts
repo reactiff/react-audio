@@ -5,6 +5,7 @@ const MAX_TOTAL_GAIN = 0.75
 
 class OscillatorModule extends BaseAudioGraphNodeModule {
 
+
     oscillators: any;
     oscillatorState: any;
     gainStage: any;
@@ -15,100 +16,159 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: (options?: any) => {
-                
-                //worker function
-                const initFreq = (frequency:number) => {
-                    const frequencyKey = Math.round(frequency*100)
-                    //see if there is an oscillator with this frequency already
-                    if(proxy.oscillators[frequencyKey]){
-                        //see if its on, and stop it...
-                        if(proxy.oscillatorState[frequencyKey]){
-                            proxy.oscillators[frequencyKey].stop();
-                            proxy.oscillatorState[frequencyKey] = 0;
-                        }
-                    }
-                    //create new oscillator
-                    const osc = proxy.oscillators[frequencyKey] = proxy.context.createOscillator();
-                    if(params.wave){
-                        var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
-                        osc.setPeriodicWave(wave);
-                    }
-                    else {
-                        osc.type = params.type;
-                    }
-                    //create frequency gain stage and
-                    const gainStage = proxy.audioEndpoints[frequencyKey] = proxy.gainStage[frequencyKey] = proxy.context.createGain();    
-                    osc.connect(gainStage)
+            init:  (options?: any) => {
+
+                //create new oscillator
+                const osc = proxy.audioEndpoints.default = proxy.context.createOscillator();
+
+                if(params.wave){
+                    var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
+                    osc.setPeriodicWave(wave);
+                }
+                else {
+                    osc.type = params.type;
                 }
 
-                //parameteric frequency
-                const frequency = options && options.frequency || params.frequency
-                if(Array.isArray(frequency)){
-                    //frequency array initialization
-                    for(let f of frequency){
-                        initFreq(f);    
-                    }
-                }
-                else{
-                    initFreq(frequency);
-                }
-                
+                //create frequency gain stage and
+                // const gainStage = proxy.audioEndpoints[frequencyKey] = proxy.gainStage[frequencyKey] = proxy.context.createGain();    
+                // osc.connect(gainStage)
             },
 
             start: (time: number, options?: any) => {
 
-                //worker function
-                const startFreq = (frequency:number) => {
-                    const frequencyKey = Math.round(frequency*100)
-                    proxy.attenuate([frequencyKey])
-                    if(frequency!==undefined){
-                        proxy.oscillators[frequencyKey].frequency.setValueAtTime(frequency, time)
-                    }
-                    proxy.oscillators[frequencyKey].start(time);
-                    proxy.oscillatorState[frequencyKey] = 1;
-                    if(params.duration!==undefined){
-                        proxy.oscillators[frequencyKey].stop(time + params.duration);
-                    }
-                }
-
                 //parameteric frequency
                 const frequency = options && options.frequency || params.frequency
-                if(Array.isArray(frequency)){
-                    //frequency array start
-                    for(let f of frequency){
-                        startFreq(f);    
-                    }
+                
+                //worker function
+                //const frequencyKey = Math.round(frequency*100)
+                //proxy.attenuate([frequencyKey])
+                if(frequency!==undefined){
+                    proxy.audioEndpoints.default.frequency.setValueAtTime(frequency, time)
                 }
-                else{
-                    startFreq(frequency);
+
+                proxy.audioEndpoints.default.start(time);
+                proxy.oscillatorState = 1;
+
+                if(params.duration!==undefined){
+                    proxy.audioEndpoints.default.stop(time + params.duration);
                 }
+                
             },
 
             stop: (options?: any) => {
 
-                //worker function
-                const stopFreq = (frequency:number) => {
-                    const frequencyKey = Math.round(frequency*100)
-                    if(proxy.oscillators[frequencyKey]){
-                        proxy.oscillators[frequencyKey].stop();
-                    }
-                    proxy.oscillatorState[frequencyKey] = 0;
+                if(proxy.audioEndpoints.default){
+                    proxy.audioEndpoints.default.stop();
                 }
 
-                //parameteric frequency
-                const frequency = options && options.frequency || params.frequency
-                if(Array.isArray(frequency)){
-                    //frequency array start
-                    for(let f of frequency){
-                        stopFreq(f);    
-                    }
-                }
-                else{
-                    stopFreq(frequency);
-                }
+                proxy.oscillatorState = 0;
 
-            }
+            },
+
+
+            // initMulti_NOT_USING: (options?: any) => {
+                
+            //     //worker function
+            //     const initFreq = (frequency:number) => {
+
+            //         const frequencyKey = Math.round(frequency*100)
+            //         //see if there is an oscillator with this frequency already
+            //         if(proxy.oscillators[frequencyKey]){
+            //             //see if its on, and stop it...
+            //             if(proxy.oscillatorState[frequencyKey]){
+            //                 proxy.oscillators[frequencyKey].stop();
+            //                 proxy.oscillatorState[frequencyKey] = 0;
+            //             }
+            //         }
+
+            //         //create new oscillator
+            //         const osc = proxy.oscillators[frequencyKey] = proxy.context.createOscillator();
+            //         if(params.wave){
+            //             var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
+            //             osc.setPeriodicWave(wave);
+            //         }
+            //         else {
+            //             osc.type = params.type;
+            //         }
+
+            //         //create frequency gain stage and
+            //         const gainStage = proxy.audioEndpoints[frequencyKey] = proxy.gainStage[frequencyKey] = proxy.context.createGain();    
+            //         osc.connect(gainStage)
+            //     }
+
+            //     //parameteric frequency
+            //     const frequency = options && options.frequency || params.frequency
+            //     if(Array.isArray(frequency)){
+            //         //frequency array initialization
+            //         for(let f of frequency){
+            //             initFreq(f);    
+            //         }
+            //     }
+            //     else{
+            //         initFreq(frequency);
+            //     }
+                
+            // },
+
+            // getAudioParam: (name: string): any[] => {
+            //     return Object.keys(this.oscillators).map(key => this.oscillators[key][name]);
+            // },
+
+            // startMulti_NOT_USED: (time: number, options?: any) => {
+
+            //     //worker function
+            //     const startFreq = (frequency:number) => {
+            //         const frequencyKey = Math.round(frequency*100)
+            //         proxy.attenuate([frequencyKey])
+            //         if(frequency!==undefined){
+            //             proxy.oscillators[frequencyKey].frequency.setValueAtTime(frequency, time)
+            //         }
+            //         proxy.oscillators[frequencyKey].start(time);
+            //         proxy.oscillatorState[frequencyKey] = 1;
+            //         if(params.duration!==undefined){
+            //             proxy.oscillators[frequencyKey].stop(time + params.duration);
+            //         }
+            //     }
+
+            //     //parameteric frequency
+            //     const frequency = options && options.frequency || params.frequency
+            //     if(Array.isArray(frequency)){
+
+            //         debugger
+            //         //frequency array start
+            //         for(let f of frequency){
+            //             startFreq(f);    
+            //         }
+            //     }
+            //     else{
+            //         startFreq(frequency);
+            //     }
+            // },
+
+            // stopMulti_NOT_USED: (options?: any) => {
+
+            //     //worker function
+            //     const stopFreq = (frequency:number) => {
+            //         const frequencyKey = Math.round(frequency*100)
+            //         if(proxy.oscillators[frequencyKey]){
+            //             proxy.oscillators[frequencyKey].stop();
+            //         }
+            //         proxy.oscillatorState[frequencyKey] = 0;
+            //     }
+
+            //     //parameteric frequency
+            //     const frequency = options && options.frequency || params.frequency
+            //     if(Array.isArray(frequency)){
+            //         //frequency array start
+            //         for(let f of frequency){
+            //             stopFreq(f);    
+            //         }
+            //     }
+            //     else{
+            //         stopFreq(frequency);
+            //     }
+
+            // }
 
         });
 

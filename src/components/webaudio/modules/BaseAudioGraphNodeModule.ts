@@ -44,6 +44,9 @@ class BaseAudioGraphNodeModule {
     }
 
     getAudioParam(name: string): any[] {
+        if(this.operations.getAudioParam){
+            return this.operations.getAudioParam(name);
+        }
         return Object.keys(this.audioEndpoints).map(key => this.audioEndpoints[key][name]);
     }
 
@@ -230,6 +233,12 @@ class BaseAudioGraphNodeModule {
         const time = this.context.currentTime;
         
         this.start(time, options);
+
+    }
+    
+    async resume() {
+
+        this.context.resume();
 
     }
 

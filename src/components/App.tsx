@@ -55,7 +55,8 @@ export default (props: any) => {
   const navRoutes = {
     home: { icon: 'home', path: '/', exact: true },
     synth: { icon: 'flask', path: '/synth', exact: true },
-    saved: { icon: 'book-open', path: '/lib', exact: true },
+    loops: { icon: 'grip-horizontal', path: '/loops', exact: true },
+    library: { icon: 'book-open', path: '/lib', exact: true },
     more: { icon: 'ellipsis-h', path: '/more' },
   };
 
