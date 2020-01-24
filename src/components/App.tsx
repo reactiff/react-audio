@@ -2,6 +2,7 @@ import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 
 import Main from './Main';
+import Loops from './Loops'
 import ThemeLoader from './ThemeLoader';
 
 import Mpg from './mpg/Mpg';
@@ -44,7 +45,7 @@ export default (props: any) => {
     setFlowHidden: setFlowHidden,
   };
 
-  body = <Main {...other} />;
+  body = <Loops {...other} />;
 
   const flowStyle: any = {};
   if(flowHidden){
@@ -72,7 +73,7 @@ export default (props: any) => {
 
       {body}
 
-      <Mpg.Navbar ref={bottomNavBarRef} location={props.location} routes={navRoutes} fixedTop/>
+      {/* <Mpg.Navbar ref={bottomNavBarRef} location={props.location} routes={navRoutes} fixedTop/> */}
 
     </div>
 
