@@ -13,6 +13,8 @@ class BaseAudioGraphNodeModule {
 
     staticEndpoints: boolean = false;
 
+    polyphonic: boolean = false;
+
     target: any;
     context: any;
     
@@ -194,9 +196,14 @@ class BaseAudioGraphNodeModule {
             src.start(time, options);
         }
 
+        const thisModule: any = this;
+
         if(typeof autoReleaseDelayMs !== 'undefined'){
-            setTimeout(opt => this.stop(opt), autoReleaseDelayMs, options)
+            setTimeout(opt => thisModule.stop(opt), autoReleaseDelayMs, options)
         }
+
+        //return release call
+        return () => thisModule.stop(options);
 
     }
 
@@ -215,26 +222,10 @@ class BaseAudioGraphNodeModule {
 
 
     async trigger(options?: any | null) {
-
-        //Instrument module implements this...
-        if(this.operations.trigger){
-            this.operations.trigger(options);
-            return;
-        }
-
-
-        debugger ////What are we doing here?
-
-
-        //init all
-        await this.init(options);
-        await this.connect();
-
-        const time = this.context.currentTime;
-        
-        this.start(time, options);
-
+        //Only instrument module implements this...
+        return await this.operations.trigger(options);
     }
+
     
     async resume() {
 
