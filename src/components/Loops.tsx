@@ -53,7 +53,7 @@ export default (props: any) => {
   const [currentBeat, setCurrentBeat] = useState<number | null>(null)
   
   const windowSize = useWindowSize()
-  const maxDiameter = Math.min(windowSize.width, windowSize.height - 55 - 30)
+  const maxDiameter = 200; //Math.min(windowSize.width, windowSize.height - 55 - 30)
   const maxRadius = maxDiameter / 2 
   const trackWidth = Math.min((maxRadius - 60) / (tracks.current.length ), 60);
   
