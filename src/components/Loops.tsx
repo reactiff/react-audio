@@ -30,44 +30,46 @@ import Stereo from './webaudio/Stereo';
 import {TransitionMethod} from './webaudio/modules/ParamModule';
 import Inline from '../shared/Inline'
 
+const inputArray = [
+  '1000101010001000'
+]
 export default (props: any) => {
 
-  const initialTracks: any = [
-    { id: uuid(), beats: 16, beatDuration: 1/16, measures: {} , foundation: true },
-    // { id: uuid(), beats: 16, beatDuration: 1/16, measures: {} },
-    // { id: uuid(), beats: 16, beatDuration: 1/16, measures: {} },
-    // { id: uuid(), beats: 16, beatDuration: 1/20, measures: {} },
-    // { id: uuid(), beats: 16, beatDuration: 1/16, measures: {} },
-    // { id: uuid(), beats: 16, beatDuration: 1/16, measures: {} },
+  const tracks = useRef<any[]>([
+    { id: uuid(), beats: 16, measures: {}, inputArray: inputArray, foundation: true },
+    { id: uuid(), beats: 16, measures: {}},
+    { id: uuid(), beats: 16, measures: {}},
+    { id: uuid(), beats: 16, measures: {}},
+    { id: uuid(), beats: 16, measures: {}},
     
     // 1: { id: uuid(), beats: 12, beatDuration: 1/12 },
-  ]
+  ]);
 
   const [playbackState, setPlaybackState] = useState(0)
   const [bpm, setBpm] = useState(100)
+    
+  const [currentMeasureNumber, setCurrentMeasureNumber] = useState(0)
+  const [currentMeasure, setCurrentMeasure] = useState<any[]>([])
+  const [currentBeat, setCurrentBeat] = useState<number | null>(null)
   
-  const [currentMeasure, setCurrentMeasure] = useState(0)
-
-  const [tracks, setTracks] = useState<any[]>(initialTracks)
-
   const windowSize = useWindowSize()
   const maxDiameter = Math.min(windowSize.width, windowSize.height - 55 - 30)
   const maxRadius = maxDiameter / 2 
-  const trackWidth = Math.min((maxRadius - 60) / (tracks.length ), 60);
+  const trackWidth = Math.min((maxRadius - 60) / (tracks.current.length ), 60);
+  
 
-  //playback handler
-  const playbackRef = useRef<any>(new Playback());
-
-  playbackRef.current.subscribe('onStateChange', setPlaybackState);
-  playbackRef.current.subscribe('onMeasureChange', setCurrentMeasure);
-
-  playbackRef.current.setTracks(tracks);
+  // handlers
+  const handleMeasureChange = (measureNumber: number, data: any[]) => {
+    setCurrentMeasureNumber(measureNumber);
+    setCurrentMeasure(data);
+    
+  }
+  
 
   const handlePlayStop = () => {
     playbackRef.current.trigger();
   }
   
-  // handlers
   const handleRegisterInstrument = (instance: any) => {
     let availableTrackIndex = 0;
     while(playbackRef.current.tracks[availableTrackIndex].instrument){
@@ -81,12 +83,31 @@ export default (props: any) => {
     }
   }
 
-  const foundationTrack =  tracks.find((t:any)=>t.foundation);
+  const playbackRef = useRef<any>(new Playback());
 
+  useEffect(()=>{
+
+    //playback component
+    playbackRef.current.subscribe('onStateChange', setPlaybackState);
+    playbackRef.current.subscribe('onMeasureChange', handleMeasureChange);
+    
+    playbackRef.current.setTracks(tracks.current);
+    playbackRef.current.init();
+
+  },[]);
+  
+
+  //memoized
   const playButton = useMemo(() => {
     let icon = Inline.switch(playbackState, 'play', 1, 'stop', 2, 'play-circle')
     return <Mpg.FontAwesomeIcon icon={icon} size="2x"/>
   }, [playbackState])
+
+  if(currentMeasure.length===0){
+    return null;
+  }
+
+  
 
   return <>
 
@@ -97,9 +118,9 @@ export default (props: any) => {
         <AudioContext>
 
           <Instrument name="Kick" registerInstrument={handleRegisterInstrument}> 
-            <Gain value={1} targetValue={0.001} duration={1}>
-              <Oscillator type="sine" duration={1} frequency={100}>
-                <Param name="frequency" value={100} targetValue={0.001} duration={0.5} method={TransitionMethod.Exponential} ></Param>
+            <Gain value={1} targetValue={0.001} duration={0.4}>
+              <Oscillator type="sine" >
+                <Param name="frequency" value={100} targetValue={0.001} duration={0.4} method={TransitionMethod.Exponential} ></Param>
               </Oscillator>
             </Gain>
           </Instrument>
@@ -169,33 +190,31 @@ export default (props: any) => {
 
       </Mpg.div>
 
+
+
       <Mpg.div className="loop-wheel-container" width={maxDiameter} height={maxDiameter}>
-        
         {/* LOOP WHEEL */}
         <Mpg.Flex className="loop-wheel" borderRadius="50%" tight alignItems="center" justifyContent="center">
-         
           <svg width={maxDiameter} height={maxDiameter}>
+
             {
-              tracks.map((track, index) => {
+              tracks.current.map((track, index) => {
+
+                // const _current_measure_ = currentMeasure;
+                // const _track_index_= index;
+                // console.log(Object.keys(_current_measure_[_track_index_]).map(key => _current_measure_[_track_index_][key] ? '1' : '_').join(''));
+
                 return <CircularTrack 
                   key={index} 
                   playbackRef={playbackRef.current} 
                   trackIndex={index} 
+                  currentMeasure={currentMeasure[index]}
                   wheelRadius={maxRadius} 
                   outerRadius={maxRadius - trackWidth * index} 
                   width={trackWidth} 
-                  data={track} />
+                  track={track} />
               })
             }
-            <CircularTrack 
-              className="beat-indicator"
-              playbackRef={playbackRef.current} 
-              wheelRadius={maxRadius} 
-              outerRadius={maxRadius - trackWidth * tracks.length} 
-              width={1} 
-              indicator={true}
-              data={foundationTrack} 
-            />
           </svg>
 
           <Mpg.Flex 
@@ -206,16 +225,16 @@ export default (props: any) => {
             borderRadius="50%"
             width={maxRadius - trackWidth * 4}
             height={maxRadius - trackWidth * 4}
-            fontSize={currentMeasure === 0 ? '1rem' : '4rem'}
-            >
-            {currentMeasure === 0 ? 'Press Play' : currentMeasure}
-          </Mpg.Flex>
-
-          
+            fontSize={currentMeasureNumber === 0 ? '1rem' : '4rem'}>{currentMeasureNumber === 0 ? 'Press Play' : currentMeasureNumber}</Mpg.Flex>
         </Mpg.Flex>
-
       </Mpg.div> 
+
       
+      
+    
+
+
+
       
       
       <Mpg.Flex className="toolbar bottom" row justifyContent="center" alignItems="flex-start" wide absolute anchorBottom>

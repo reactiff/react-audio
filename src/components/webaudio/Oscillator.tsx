@@ -17,6 +17,7 @@ type OscillatorType = {
     type: any,
     frequency?: any,
     prime?: boolean,
+    polyphonic?: boolean,
     duration?: number,
 
     wave?: any,

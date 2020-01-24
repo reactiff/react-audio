@@ -19,7 +19,20 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
             init:  (options?: any) => {
 
                 //create new oscillator
-                const osc = proxy.audioEndpoints.default = proxy.context.createOscillator();
+
+                const frequency = options && options.frequency || params.frequency;
+                
+                //worker function
+                const frequencyKey = Math.round(frequency*100);
+                //proxy.attenuate([frequencyKey]);
+                
+                //if this frequency already exists, get out
+                // if(proxy.polyphonic && proxy.oscillators[frequencyKey]){
+                //     return;
+                // }
+
+                //const osc = proxy.audioEndpoints[frequencyKey] = proxy.oscillators[frequencyKey] = proxy.context.createOscillator();
+                const osc = proxy.audioEndpoints[frequencyKey] = proxy.context.createOscillator();
 
                 if(params.wave){
                     var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
@@ -29,42 +42,98 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
                     osc.type = params.type;
                 }
 
-                //create frequency gain stage and
-                // const gainStage = proxy.audioEndpoints[frequencyKey] = proxy.gainStage[frequencyKey] = proxy.context.createGain();    
-                // osc.connect(gainStage)
+                // if(proxy.polyphonic) {
+                //     //create frequency gain stage and
+                //     const gainStage = proxy.audioEndpoints[frequencyKey] = proxy.context.createGain();    
+                                    
+                //     osc.connect(gainStage);
+                // }
+                
             },
 
             start: (time: number, options?: any) => {
 
+
                 //parameteric frequency
                 const frequency = options && options.frequency || params.frequency
-                
-                //worker function
-                //const frequencyKey = Math.round(frequency*100)
-                //proxy.attenuate([frequencyKey])
-                if(frequency!==undefined){
-                    proxy.audioEndpoints.default.frequency.setValueAtTime(frequency, time)
-                }
+                const frequencyKey = Math.round(frequency*100)
 
-                proxy.audioEndpoints.default.start(time);
-                proxy.oscillatorState = 1;
+                // if(proxy.polyphonic && proxy.oscillatorState[frequencyKey]){
+                //     return;
+                // }
+
+                // const velocity = options && options.velocity || params.velocity || 1;
+                // const attackGain = velocity;
+
+                //proxy.attenuate([frequencyKey])
+                proxy.audioEndpoints[frequencyKey].frequency.setValueAtTime(frequency, time)
+
+                // if(proxy.polyphonic){
+                //     proxy.audioEndpoints[frequencyKey].gain.setValueAtTime(attackGain, time);
+                // }
+                
+                proxy.audioEndpoints[frequencyKey].start(time);
+
+                //oscillator state
+                //proxy.oscillatorState[frequencyKey] = 1;
 
                 if(params.duration!==undefined){
-                    proxy.audioEndpoints.default.stop(time + params.duration);
+
+                    // if(proxy.polyphonic){
+                    //     proxy.audioEndpoints[frequencyKey].gain.setTargetAtTime(0, time + params.duration, 0.05);
+                    // }
+                    
+                    proxy.audioEndpoints[frequencyKey].stop(time + params.duration)
+                    
+                    // if(proxy.polyphonic){
+                    //     //cleanup
+                    //     delete proxy.oscillators[frequencyKey]
+                    //     proxy.oscillatorState[frequencyKey] = 0;
+                    // }
                 }
                 
             },
 
             stop: (options?: any) => {
 
-                if(proxy.audioEndpoints.default){
-                    proxy.audioEndpoints.default.stop();
+                //parameteric frequency
+                const frequency = options && options.frequency || params.frequency
+                
+                //worker function
+                const frequencyKey = Math.round(frequency*100)
+
+                // if(proxy.polyphonic){
+                //     if(!proxy.oscillators[frequencyKey]){
+                //         return;
+                //     }
+                // }
+
+                if(proxy.audioEndpoints[frequencyKey]){
+                    const time = audioContext.currentTime;
+
+                    // if(proxy.polyphonic){
+                    //     proxy.audioEndpoints[frequencyKey].gain.setTargetAtTime(0, time, 0.05);
+                    // }
+
+                    proxy.audioEndpoints[frequencyKey].stop(time)
                 }
 
-                proxy.oscillatorState = 0;
+                // if(proxy.polyphonic){
+                //     delete proxy.oscillators[frequencyKey]
+                //     //oscillator state
+                //     proxy.oscillatorState[frequencyKey] = 0;
+                // }
 
             },
 
+            // getAudioParam: (name: string): any[] => {
+            //     if(name==='gain'){ // get gain stage params
+            //         return Object.keys(this.audioEndpoints).map(key => this.audioEndpoints[key][name]);
+            //     }
+            //     else{
+            //         return Object.keys(this.oscillators).map(key => this.oscillators[key][name]);
+            //     }
+            // },
 
             // initMulti_NOT_USING: (options?: any) => {
                 
@@ -173,7 +242,9 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
         });
 
         this.$type = 'Oscillator';
-        this.staticEndpoints = true;      
+        this.staticEndpoints = false;      
+
+        //this.polyphonic = params.polyphonic;
 
         this.oscillators = {};
         this.oscillatorState = {};
