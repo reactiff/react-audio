@@ -15,10 +15,10 @@ export default (props: any) => {
   const W = props.width;
   const innerR = R - W;
   
-  const keys = Object.keys(props.currentMeasure);
+  const keys = Array.from({length: track.beats});
 
-  const _current_measure_ = props.currentMeasure;
-  const datastr = keys.map(key => _current_measure_[key] ? '1' : '_').join('');
+  // const _current_measure_ = props.currentMeasure;
+  // const datastr = keys.map(key => _current_measure_[key] ? '1' : '_').join('');
   
   const angularStep = Math.PI * 2 / keys.length;
   const angularOffset = -Math.PI / 2;
@@ -40,6 +40,7 @@ export default (props: any) => {
           trackId: track.id,
           trackIndex: props.trackIndex,
           beatIndex: index,
+          trackBeats: track.beats,
           outerR: R,
           innerR: innerR,
           points: [
@@ -53,9 +54,9 @@ export default (props: any) => {
         return <CircularTrackSegment 
           key={index} 
           segment={s} 
-          currentMeasure={props.currentMeasure}
+          // currentMeasure={props.currentMeasure}
           playbackRef={props.playbackRef} 
-          hashKey={datastr}
+          hashKey={track.id}
         />
     
     

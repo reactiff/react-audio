@@ -31,18 +31,22 @@ import {TransitionMethod} from './webaudio/modules/ParamModule';
 import Inline from '../shared/Inline'
 
 const inputArray = [
-  '1000101010001000'
+  '1000000000000000',
 ]
 export default (props: any) => {
 
   const tracks = useRef<any[]>([
-    { id: uuid(), beats: 16, measures: {}, inputArray: inputArray, foundation: true },
-    { id: uuid(), beats: 16, measures: {}},
-    { id: uuid(), beats: 16, measures: {}},
-    { id: uuid(), beats: 16, measures: {}},
-    { id: uuid(), beats: 16, measures: {}},
+
+    { id: "kick1", beats: 16, measures: {}, inputArray: inputArray, foundation: true },
+    // { id: "kick2", beats: 12, measures: {}},
+
+    { id: "snare1", beats: 16, measures: {}},
+    //{ id: "snare2", beats: 20, measures: {}},
+
+    // { id: "hihat1", beats: 16, measures: {}},
+    { id: "hihat2", beats: 32, measures: {}},
+    //{ id: "hihat3", beats: 28, measures: {}},
     
-    // 1: { id: uuid(), beats: 12, beatDuration: 1/12 },
   ]);
 
   const [playbackState, setPlaybackState] = useState(0)
@@ -59,10 +63,8 @@ export default (props: any) => {
   
 
   // handlers
-  const handleMeasureChange = (measureNumber: number, data: any[]) => {
+  const handleMeasureNumberChange = (measureNumber: number) => {
     setCurrentMeasureNumber(measureNumber);
-    setCurrentMeasure(data);
-    
   }
   
 
@@ -70,17 +72,15 @@ export default (props: any) => {
     playbackRef.current.trigger();
   }
   
-  const handleRegisterInstrument = (instance: any) => {
-    let availableTrackIndex = 0;
-    while(playbackRef.current.tracks[availableTrackIndex].instrument){
-      availableTrackIndex++;
-      if(!playbackRef.current.tracks[availableTrackIndex]){
-        return
-      }
+  const handleRegisterInstrument = (inst: any) => {
+
+    const track = playbackRef.current.tracks.find((tr: any) => tr.id === inst.$params.trackName)
+
+    if(track){
+      track.instrument = inst;
     }
-    if(playbackRef.current.tracks[availableTrackIndex]){
-      playbackRef.current.tracks[availableTrackIndex].instrument = instance;
-    }
+    
+
   }
 
   const playbackRef = useRef<any>(new Playback());
@@ -89,10 +89,10 @@ export default (props: any) => {
 
     //playback component
     playbackRef.current.subscribe('onStateChange', setPlaybackState);
-    playbackRef.current.subscribe('onMeasureChange', handleMeasureChange);
+    playbackRef.current.subscribe('onMeasureNumberChange', handleMeasureNumberChange);
     
     playbackRef.current.setTracks(tracks.current);
-    playbackRef.current.init();
+    
 
   },[]);
   
@@ -103,9 +103,9 @@ export default (props: any) => {
     return <Mpg.FontAwesomeIcon icon={icon} size="2x"/>
   }, [playbackState])
 
-  if(currentMeasure.length===0){
-    return null;
-  }
+  // if(currentMeasure.length===0){
+  //   return null;
+  // }
 
   
 
@@ -117,38 +117,38 @@ export default (props: any) => {
 
         <AudioContext>
 
-          <Instrument name="Kick" registerInstrument={handleRegisterInstrument}> 
-            <Gain value={1} targetValue={0.001} duration={0.4}>
-              <Oscillator type="sine" >
-                <Param name="frequency" value={100} targetValue={0.001} duration={0.4} method={TransitionMethod.Exponential} ></Param>
+          <Instrument name="Kick 1" trackName="kick1" registerInstrument={handleRegisterInstrument}> 
+            <Gain value={1} targetValue={0.001} duration={0.35}>
+              <Oscillator type="sine" duration={0.4} frequency={100}>
+                <Param name="frequency" targetValue={0.001} ></Param>
+              </Oscillator>
+            </Gain>
+          </Instrument>
+          <Instrument name="Kick 2" trackName="kick2" registerInstrument={handleRegisterInstrument}> 
+            <Gain value={1} targetValue={0.001} duration={0.2}>
+              <Oscillator type="sine" duration={0.2} frequency={100}>
+                <Param name="frequency" targetValue={0.001} ></Param>
               </Oscillator>
             </Gain>
           </Instrument>
 
-          <Instrument name="Snare" registerInstrument={handleRegisterInstrument}>
-            
-              {/* <Gain value={0.1} targetValue={0.001} duration={0.2}>
-                <Noise duration={0.2} playbackRate={1}></Noise>
-              </Gain> */}
-            
+          <Instrument name="Snare 1" trackName="snare1" registerInstrument={handleRegisterInstrument}>
               <Gain value={1} targetValue={0.001} duration={0.2}>
-                <Oscillator type="sine" duration={0.2}>
-                  <Param name="frequency" value={400} targetValue={1} duration={0.1} method={TransitionMethod.Exponential} ></Param>
+                <Oscillator type="sine" duration={0.2} frequency={400}>
+                  <Param name="frequency" targetValue={0.1} ></Param>
                 </Oscillator>
               </Gain>
-
-              {/* <Gain value={0.2} targetValue={0.001} duration={0.1}>
-                <Oscillator type="square" duration={0.2}>
-                  <Param name="frequency" value={2000} targetValue={0.001} duration={0.1} method={TransitionMethod.Exponential} ></Param>
+          </Instrument>
+          <Instrument name="Snare 2" trackName="snare2" registerInstrument={handleRegisterInstrument}>
+              <Gain value={1} targetValue={0.001} duration={0.1}>
+                <Oscillator type="sine" duration={0.15} frequency={200}>
+                  <Param name="frequency" targetValue={0.1} ></Param>
                 </Oscillator>
-              </Gain> */}
-
+              </Gain>
           </Instrument>
 
 
-          <Instrument name="HiHat" registerInstrument={handleRegisterInstrument}>
-            {/* <Filter type={FilterType.lowpass} frequency={11000} Q={1}> */}
-            
+          <Instrument name="HiHat 1" trackName="hihat1" registerInstrument={handleRegisterInstrument}>
               <Filter type={FilterType.highpass} frequency={12000} Q={10}>
                 <Gain value={0.5} targetValue={0.00001} duration={0.1}>
                   <Stereo pan={-0.5}>
@@ -156,33 +156,35 @@ export default (props: any) => {
                   </Stereo>
                 </Gain>
               </Filter>
-            
-            {/* </Filter> */}
           </Instrument>
 
-          <Instrument name="Offbeat Hihat" registerInstrument={handleRegisterInstrument}>
-            {/* <Filter type={FilterType.lowpass} frequency={11000} Q={1}> */}
-            
+          <Instrument name="HiHat 2" trackName="hihat2"  registerInstrument={handleRegisterInstrument}>
               <Filter type={FilterType.highpass} frequency={12000} Q={10}>
-                
                 <Gain value={0.1} targetValue={0.00001} duration={0.1}>
                   <Stereo pan={0.5}>
                     <Noise duration={0.1} playbackRate={1} />
                   </Stereo>
                 </Gain>
-                
               </Filter>
-            
-            {/* </Filter> */}
           </Instrument>
 
-          <Instrument name="Clap" registerInstrument={handleRegisterInstrument}>
+          <Instrument name="HiHat 3"  trackName="hihat3" registerInstrument={handleRegisterInstrument}>
+              <Filter type={FilterType.highpass} frequency={12000} Q={10}>
+                <Gain value={0.3} targetValue={0.00001} duration={0.1}>
+                  <Stereo pan={0.1}>
+                    <Noise duration={0.1} playbackRate={1.5} />
+                  </Stereo>
+                </Gain>
+              </Filter>
+          </Instrument>
+          
+          {/* <Instrument name="Clap" registerInstrument={handleRegisterInstrument}>
             <Filter type={FilterType.highpass} frequency={1000} Q={10}>
-              <Gain value={0.5} targetValue={0.00001} duration={0.5}>
+              <Gain value={0.3} targetValue={0.00001} duration={0.5}>
                 <Noise duration={0.3} playbackRate={2}></Noise>
               </Gain>
             </Filter>
-          </Instrument>
+          </Instrument> */}
 
           
 
@@ -208,7 +210,7 @@ export default (props: any) => {
                   key={index} 
                   playbackRef={playbackRef.current} 
                   trackIndex={index} 
-                  currentMeasure={currentMeasure[index]}
+                  // currentMeasure={currentMeasure[index]}
                   wheelRadius={maxRadius} 
                   outerRadius={maxRadius - trackWidth * index} 
                   width={trackWidth} 

@@ -7,72 +7,89 @@ import getTrackColors from './getTrackColors'
 export default (props: any) => {
   
   const s = props.segment;
+
   const elementRef: any = useRef();
+  const stateRef: any = useRef({});
   
-  const classNames = ["segment", props.hashKey, 'CLASS'];
+  const classNames = ["segment", props.hashKey];
 
   const colors: any = getTrackColors(s.trackIndex);
-
-  const getColor = (currentMeasure: any, currentbeat: number) => {
-
-    if(currentMeasure[s.trackIndex][s.beatIndex] === true){ //if beat is selected
-
-      if(s.beatIndex === currentbeat && props.playbackRef.state !== 0) { //if active and NOT STOPPED 
+  const getColor = (currentBeat?: number) => {
+    if(stateRef.current.selected === true){ //if beat is selected
+      if(s.beatIndex === currentBeat && props.playbackRef.state !== 0) { //if active and NOT STOPPED 
         return [colors.segment.active, colors.segment.selected];
       }
       else{
         return [colors.segment.selected];
       }
-
     }
     else{
       return [colors.segment.default];
     }
   }
 
-  const getState = (currentbeat: number) => {
-
-    if(props.playbackRef.currentMeasure[s.trackIndex][s.beatIndex] === true){ //if beat is selected
-
-      return 'SELECTED';
-
-    }
-    else{
-      return '';
-    }
-  }
-
   const handleToggle = async () =>{
-    props.playbackRef.toggleNote(s.trackId, s.beatIndex);
+
+    stateRef.current.selected = !stateRef.current.selected;
+    const color = getColor(-1);
+    elementRef.current.style.fill = color[0];
+    // elementRef.current.setAttribute('selected', stateRef.current.selected ? 'true' : 'false');
+    // elementRef.current.setAttribute('setter', 'handleToggle');
+
+    props.playbackRef.setNoteSelected(s.trackId, s.beatIndex, stateRef.current.selected);
+
   }
   
+  const handleMeasureStateChanged = async (value: boolean, currentBeat: number, measureNumber: number) => {
 
-  const handleBeat = async (currentMeasure: any, currentBeat: number, duration: number) => {
+    stateRef.current.selected = value;
+    stateRef.current.measureNumber = measureNumber;
     
-    // const cellState = getState(currentBeat);
 
-    // elementRef.current.setAttribute("state", cellState); 
-    
-    const color = getColor(currentMeasure, currentBeat);
+    const color = getColor(currentBeat);
     elementRef.current.style.fill = color[0];
+    // elementRef.current.setAttribute('selected', stateRef.current.selected ? 'true' : 'false');
+    // elementRef.current.setAttribute('setter', 'handleMeasureStateChanged');
+  }; 
 
-    if(color.length>1){
+  const handleStepActivated = async (duration: number, measureNumber: number) => {
+
+    const color = getColor(s.beatIndex);
+    
+    elementRef.current.style.fill = color[0];
+    // elementRef.current.setAttribute('selected', stateRef.current.selected ? 'true' : 'false');
+    // elementRef.current.setAttribute('setter', 'handleStepActivated');
+    // elementRef.current.setAttribute('duration', duration);
+
+    const looping = props.playbackRef.state === 2;
+
+    if(color.length > 1 && (looping || s.beatIndex < s.trackBeats - 1)){
       setTimeout(()=>{
         elementRef.current.style.fill = color[1];
+        // elementRef.current.setAttribute('selected', stateRef.current.selected ? 'true' : 'false');
+        // elementRef.current.setAttribute('setter', 'handleStepActivated Timeout');
+        // elementRef.current.setAttribute('duration', duration);
       }, duration)
     }
-    
-  }
 
+  }
   
-  const initialStyle = {
-    fill: props.currentMeasure[s.beatIndex] ? colors.segment.selected : colors.segment.default,
-  };
-  
-  
+  // const initialStyle = {
+  //   fill: props.currentMeasure[s.beatIndex] ? colors.segment.selected : colors.segment.default,
+  // };
   
   useEffect(()=>{
-    return props.playbackRef.subscribe('onBeat', handleBeat, {beatIndex: s.beatIndex});
+
+    const unsubscribeOnStepActivated = props.playbackRef.onStepActivated(s.trackIndex, s.beatIndex, handleStepActivated);
+    const unsubscribeOnStepSelected = props.playbackRef.onStepSelected(s.trackIndex, s.beatIndex, handleMeasureStateChanged);
+
+    const cleanup = () => {
+      unsubscribeOnStepActivated();
+      unsubscribeOnStepSelected();
+    };
+
+    return cleanup;
+
   },[]);
   
 
@@ -87,7 +104,6 @@ export default (props: any) => {
   return <path 
     {...pathProps}
     className={classNames.join(' ')}
-    style={initialStyle}
     ref={elementRef}
     d={`
       M ${s.points[0].x} ${s.points[0].y}

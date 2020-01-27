@@ -25,6 +25,10 @@ type ParamPropsType = {
     duration?: number,
 }
 
+const defaultValues = {
+    method: TransitionMethod.Exponential,
+}
+
 export default (props: ParamPropsType) => {
 
     let children = null;
@@ -34,7 +38,7 @@ export default (props: ParamPropsType) => {
         const proxy = new ParamModule(
             props.target,
             props.context,
-            paramsFromProps(props)
+            paramsFromProps(props, {}, defaultValues)
         );
 
         proxy.target.registerSource(proxy);

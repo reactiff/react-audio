@@ -41,6 +41,8 @@ class InstrumentModule extends BaseAudioGraphNodeModule {
         
             }
 
+            
+
         });
 
         // if(params.signalSource) {

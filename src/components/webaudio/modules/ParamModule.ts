@@ -33,58 +33,62 @@ class ParamModule extends BaseAudioGraphNodeModule {
 
                 const targetParams = proxy.target.getAudioParam(params.name);
 
+                let durationValue = params.duration;
+                if(typeof params.duration === 'undefined'){
+                    //if no duration specified, use target's duration
+                    durationValue = proxy.target.getAudioParam('duration')[0].value;
+                }
+
                 if(params.value){
-
                     //set initial values
-                    for(let p of targetParams){
-                        p.setValueAtTime(params.value, time + (params.delay || 0));
-                    }
-                    
-                    if(params.targetValue && params.duration){
-
-                        const method = params.method || TransitionMethod.Linear;
-
-                        switch(method){
-
-                            case TransitionMethod.Target:
-
-                                for(let p of targetParams){
-                                    p.setTargetAtTime(
-                                        params.targetValue, 
-                                        time + (params.delay || 0),
-                                        (params.duration || 0)
-                                    );
-                                }
-                                
-                                break;
-
-                            case TransitionMethod.Exponential:
-
-                                for(let p of targetParams){
-                                    p.exponentialRampToValueAtTime(
-                                        params.targetValue, 
-                                        time + (params.delay || 0) + (params.duration || 0)    
-                                    );
-                                }
-
-                                break;
-
-                            default: //TransitionMethod.Linear
-
-                                for(let p of targetParams){
-                                    p.linearRampToValueAtTime(
-                                        params.targetValue, 
-                                        time + (params.delay || 0) + (params.duration || 0)    
-                                    );
-                                }
-
-                                break;
-
+                    if(typeof params.value !== 'undefined'){
+                        for(let p of targetParams){
+                            p.setValueAtTime(params.value, time + (params.delay || 0));
                         }
+                    }
+                }
+                else if(params.targetValue){
+
+                    const method = params.method || TransitionMethod.Linear;
+
+                    switch(method){
+
+                        case TransitionMethod.Target:
+
+                            for(let p of targetParams){
+                                p.setTargetAtTime(
+                                    params.targetValue, 
+                                    time + (params.delay || 0),
+                                    (durationValue || 0)
+                                );
+                            }
+                            
+                            break;
+
+                        case TransitionMethod.Exponential:
+
+                            for(let p of targetParams){
+                                p.exponentialRampToValueAtTime(
+                                    params.targetValue, 
+                                    time + (params.delay || 0) + (durationValue || 0)    
+                                );
+                            }
+
+                            break;
+
+                        default: //TransitionMethod.Linear
+
+                            for(let p of targetParams){
+                                p.linearRampToValueAtTime(
+                                    params.targetValue, 
+                                    time + (params.delay || 0) + (durationValue || 0)    
+                                );
+                            }
+
+                            break;
 
                     }
-                    
-                    
+
                 }
                 else if(params.curve) {
 
@@ -92,7 +96,7 @@ class ParamModule extends BaseAudioGraphNodeModule {
                         p.setValueCurveAtTime(
                             params.curve, 
                             time + (params.delay || 0), 
-                            (params.duration || 0)
+                            (durationValue || 0)
                         );
                     }
                     
