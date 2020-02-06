@@ -76,24 +76,19 @@ export default (props: any) => {
 
         document.addEventListener('keyup', (event) => {
             if(isChromaKey(event.key)){
-
-                const f = getChromaFrequency(event.key)
-
-                const activeInstrument = keyBindings.current['chromatic']
-
-                if(!activeInstrument.autoRelease){
-                    activeInstrument.stop({frequency:f})
+                if(keyBindings.current['chromatic']){
+                    const f = getChromaFrequency(event.key)
+                    const activeInstrument = keyBindings.current['chromatic']
+                    if(!activeInstrument.autoRelease){
+                        activeInstrument.stop({frequency:f})
+                    }
                 }
-
             }
             else if(keyBindings.current.hasOwnProperty(event.key)){
-
                 const activeInstrument = keyBindings.current[event.key]
-
                 if(!activeInstrument.autoRelease){
                     activeInstrument.stop()
                 }
-
             }
         }, false);
           

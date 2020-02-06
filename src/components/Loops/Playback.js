@@ -4,7 +4,7 @@ const STOPPED = 0;
 const PLAYING = 1;
 const REPEAT = 2;
 
-const SUBSCRIPTION_EVENTS = ['onStateChange', 'onMeasureChange', 'onBeat'];
+const SUBSCRIPTION_EVENTS = ['onStateChange', 'onMeasureNumberChange', 'onBeat'];
 
 export default class Playback {
 
@@ -21,15 +21,36 @@ export default class Playback {
 
         this.timer = null;
 
-        this.tracks = {};
+        this.projectRef = {};
         this.foundationTrack = null;
         this.trackGroups = [];
 
-        this.tempo = 130;
-        this.measureCount = 2;
+        
+        this.prevMeasureNumber = 0;
         this.measureNumber = 0;
         
-        this.subscriptions = {}
+        this.subscriptions = {};
+
+        this.stepSelectionCallbacks = {};
+        this.stepActivationCallbacks = {};
+
+        this.initialized = false;
+    }
+
+    get tracks() {
+        return this.projectRef.current.tracks;
+    }
+    get tempo() {
+        return this.projectRef.current.tempo;
+    }
+    get measureCount() {
+        return this.projectRef.current.bars;
+    }
+
+
+    setProject(projectRef) {
+        this.projectRef = projectRef;
+        this.foundationTrack = this.tracks.find(t=>t.foundation);
     }
 
     getTrackData(measureNumber) {
@@ -39,12 +60,32 @@ export default class Playback {
         });
     }
     init() {
-        for(let i = 0; i < this.tracks.length; i++){
-            this.tracks[i].index = i;
-            this.initTrack(this.tracks[i]);
+
+        if(this.initialized){
+            return;
         }
-        const data = this.getTrackData(1);
-        this.notify('onMeasureChange', { measureNumber: 1, data: data });
+
+        this.initialized = true;
+
+        if(this.measureNumber === 0){
+            this.measureNumber = 1;
+            this.prevMeasureNumber = 1;
+        }
+
+        for(let i = 0; i < this.tracks.length; i++){
+            const track = this.tracks[i];
+            track.index = i;
+            this.initTrack(track);
+            
+            //set selection state for each beat
+            for(let j = 0; j < track.beats; j++){
+                const value = track.measures[1][j];
+                this.setStepSelected(i, j, value, 0, 1);
+            }
+        }
+
+        //const data = this.getTrackData(1);
+        //this.notify('onMeasureChange', { measureNumber: 1, data: data });
     }
 
     subscribe(event, callback, filter) {
@@ -120,10 +161,6 @@ export default class Playback {
 
         track.initialized = true;
 
-        if(this.measureNumber === 0){
-            this.measureNumber = 1;
-        }
-
         if(track.inputArray){
             for(let d = 0; d < track.inputArray.length; d++){
                 const input = track.inputArray[d];
@@ -152,7 +189,8 @@ export default class Playback {
     }
 
     loop() {
-
+        
+        
         this.loopDuration = 60000 / this.tempo * 4;
         
         //group tracks with same measure and handle with one timer
@@ -173,9 +211,9 @@ export default class Playback {
 
             group.absoluteBeatIndex = 0;
             
-            const playBeat = (group) => {
+            const playBeat = async (group) => {
 
-                const beatIndex = group.absoluteBeatIndex % group.beats;
+                const beatIndex = this.currentBeat = group.absoluteBeatIndex % group.beats;
                 
                 let measureNumberChanged = false;
                 if(group.foundation){
@@ -188,7 +226,9 @@ export default class Playback {
                         this.currentMeasure = this.getTrackData(measureNumber);
 
                         //get current measure for each track
-                        this.notify('onMeasureChange', { measureNumber: measureNumber, data: this.getTrackData(measureNumber) });
+                        this.notify('onMeasureNumberChange', { measureNumber: measureNumber });
+
+                        
                         
                     }
                 }
@@ -198,10 +238,16 @@ export default class Playback {
                 }
 
                 //activate segment
-                this.notify('onBeat', {currentMeasure: this.currentMeasure, beatIndex: beatIndex, duration: group.beatDuration });
+                //this.notify('onBeat', {currentMeasure: this.currentMeasure, beatIndex: beatIndex, duration: group.beatDuration });
                 
                 //trigger sounds
                 group.soundTracks.forEach(st => {
+
+                    if(this.prevMeasureNumber !== this.measureNumber){
+                        this.compareAndUpdateBeatStates(this.prevMeasureNumber, this.measureNumber, st.index, beatIndex);
+                    }
+
+                    
 
                     const measure = st.measures[this.measureNumber] || st.measures[1];
                     
@@ -253,9 +299,12 @@ export default class Playback {
                         if(st.instrument){
                             st.instrument.trigger();
                         }
+                        // if(st.index === 0){
+                            this.stepActivated(st.index, this.measureNumber, beatIndex, group.beatDuration);
+                        // }
+                        
                     }
-                    
-                    
+
 
                     //st.processBeat(group.beatDuration);
 
@@ -264,6 +313,8 @@ export default class Playback {
                     //    this.trackBeatBindings[st.id + ':' + beatIndex](beatDuration);
                     //}
                 })
+
+                this.prevMeasureNumber = this.measureNumber;
 
                 // if(group.foundation && group.indicatorTrack){
                     // group.indicatorTrack.processBeat(beatDuration);
@@ -295,8 +346,15 @@ export default class Playback {
     
     trigger() {
 
+        this.init();
+
         if(this.state === STOPPED){
-            this.state =  PLAYING;    
+            this.state =  PLAYING;  
+            
+            this.measureNumber = 1;
+            this.prevMeasureNumber = 1;
+            //get current measure for each track
+            this.notify('onMeasureNumberChange', { measureNumber: this.measureNumber });
         }
         else if(this.state === REPEAT){
             this.state = PLAYING;   
@@ -327,13 +385,17 @@ export default class Playback {
         this.measureCount = count;
     }
 
-    setTracks(tracks) {
-        this.tracks = tracks;
-        this.foundationTrack = this.tracks.find(t=>t.foundation);
-    }
+    
 
-    toggleNote(trackId, beatIndex){
+    setNoteSelected(trackId, beatIndex, value){
 
+        let stateChanged = false;
+
+        if(this.state !== REPEAT){
+            stateChanged = true;
+        }
+
+        //right now, we want to start repeating the measure as soon as it starts being edited
         this.state = REPEAT;
         
         const track = this.tracks.find(x=>x.id === trackId);
@@ -344,24 +406,22 @@ export default class Playback {
         
         const measureNumber = this.measureNumber;
 
-        
-
         //create a copy of new measure
         let measure = track.measures[measureNumber];
         if(!measure){
 
-            for(let i = 0; i < this.tracks.length; i++) {
+            //for(let i = 0; i < this.tracks.length; i++) {
 
                 const initialData = {};
-                for(let j=0; j<track.beats; j++) { 
+                for(let j=0; j < track.beats; j++) { 
                     initialData[j] = false; 
                 }
 
-                Object.assign(initialData, this.tracks[i].measures[1]);
+                Object.assign(initialData, track.measures[1]);
 
-                this.tracks[i].measures[measureNumber] = initialData;
+                track.measures[measureNumber] = initialData;
 
-            }
+            //}
             
         }
 
@@ -371,17 +431,59 @@ export default class Playback {
 
         //toggle the note
         //track.currentMeasure[beatIndex] = !track.currentMeasure[beatIndex];
-        measure[beatIndex] = !measure[beatIndex];
+        measure[beatIndex] = value;
         
         // if(measureNumber === 2){
         //     debugger;
         // }
 
-        const data = this.getTrackData(measureNumber);
+        //const data = this.getTrackData(measureNumber);
 
-        this.notify('onMeasureChange', { measureNumber: measureNumber, data:  data});
+        //stepSelected(track.index, beatIndex, stepSelected);
 
-        this.notify('onStateChange', {value: this.state})
+        if(stateChanged){
+            this.notify('onStateChange', {value: this.state})
+        }
+        
+    }
+
+    compareAndUpdateBeatStates(prevMeasureNum, curMeasureNum, trackIndex, currentBeat) {
+        
+        const prevMeasure = this.tracks[trackIndex].measures[prevMeasureNum] || this.tracks[trackIndex].measures[1];
+        const curMeasure = this.tracks[trackIndex].measures[curMeasureNum] || this.tracks[trackIndex].measures[1];
+
+        for(let i=0; i<this.tracks[trackIndex].beats; i++){
+            const prevValue = prevMeasure[i];
+            const value = curMeasure[i];
+            if(prevValue !== value){
+                this.setStepSelected(trackIndex, i, value, currentBeat, curMeasureNum);
+            }
+        }
+        
+    }
+
+    setStepSelected(trackIndex, beatIndex, value, currentBeat, measureNumber){
+        this.stepSelectionCallbacks[trackIndex + '-' + beatIndex](value, currentBeat, measureNumber);
+    }
+    onStepSelected(trackIndex, beatIndex, callback) {
+        this.stepSelectionCallbacks[trackIndex + '-' + beatIndex] = callback;
+        const unsibscribe = () => {
+            delete this.stepSelectionCallbacks[trackIndex + '-' + beatIndex];
+        }
+        return unsibscribe;
+    }
+
+    stepActivated(trackIndex, measureNumber, beatIndex, duration){
+        if(this.stepActivationCallbacks[trackIndex + '-' + beatIndex]){
+            this.stepActivationCallbacks[trackIndex + '-' + beatIndex](duration, measureNumber);
+        }
+    }
+    onStepActivated(trackIndex, beatIndex, callback) {
+        this.stepActivationCallbacks[trackIndex + '-' + beatIndex] = callback;
+        const unsibscribe = () => {
+            delete this.stepActivationCallbacks[trackIndex + '-' + beatIndex];
+        }
+        return unsibscribe;
     }
 
     //

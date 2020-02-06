@@ -4,7 +4,7 @@ import Synth from './Synth'
 import Lib from './Lib'
 import Home from './Home'
 import More from './More'
-import Loops from './Loops'
+import Loops from './Loops/Loops'
 
 import { Switch, Route } from 'react-router-dom';
 

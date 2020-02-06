@@ -32,7 +32,8 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
                 // }
 
                 //const osc = proxy.audioEndpoints[frequencyKey] = proxy.oscillators[frequencyKey] = proxy.context.createOscillator();
-                const osc = proxy.audioEndpoints[frequencyKey] = proxy.context.createOscillator();
+                //const osc = proxy.audioEndpoints[frequencyKey] = proxy.context.createOscillator();
+                const osc = proxy.audioEndpoints.default = proxy.context.createOscillator();
 
                 if(params.wave){
                     var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
@@ -66,41 +67,51 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
                 // const attackGain = velocity;
 
                 //proxy.attenuate([frequencyKey])
-                proxy.audioEndpoints[frequencyKey].frequency.setValueAtTime(frequency, time)
+
+                const osc = proxy.audioEndpoints.default;
+
+                osc.frequency.setValueAtTime(frequency, time)
 
                 // if(proxy.polyphonic){
                 //     proxy.audioEndpoints[frequencyKey].gain.setValueAtTime(attackGain, time);
                 // }
                 
-                proxy.audioEndpoints[frequencyKey].start(time);
+                osc.start(time);
 
                 //oscillator state
                 //proxy.oscillatorState[frequencyKey] = 1;
 
-                if(params.duration!==undefined){
+                // if(params.duration!==undefined){
 
                     // if(proxy.polyphonic){
                     //     proxy.audioEndpoints[frequencyKey].gain.setTargetAtTime(0, time + params.duration, 0.05);
                     // }
                     
-                    proxy.audioEndpoints[frequencyKey].stop(time + params.duration)
+                    osc.onended = () => osc.disconnect();
+
+                    osc.stop(time + params.duration)
                     
                     // if(proxy.polyphonic){
                     //     //cleanup
                     //     delete proxy.oscillators[frequencyKey]
                     //     proxy.oscillatorState[frequencyKey] = 0;
                     // }
-                }
+                //}
                 
             },
 
             stop: (options?: any) => {
+
+                return;
+
 
                 //parameteric frequency
                 const frequency = options && options.frequency || params.frequency
                 
                 //worker function
                 const frequencyKey = Math.round(frequency*100)
+                
+                const osc = proxy.audioEndpoints.default;
 
                 // if(proxy.polyphonic){
                 //     if(!proxy.oscillators[frequencyKey]){
@@ -108,15 +119,15 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
                 //     }
                 // }
 
-                if(proxy.audioEndpoints[frequencyKey]){
-                    const time = audioContext.currentTime;
+                // if(proxy.audioEndpoints[frequencyKey]){
+                //     const time = audioContext.currentTime;
 
                     // if(proxy.polyphonic){
                     //     proxy.audioEndpoints[frequencyKey].gain.setTargetAtTime(0, time, 0.05);
                     // }
 
-                    proxy.audioEndpoints[frequencyKey].stop(time)
-                }
+                    // osc.stop(time)
+                // }
 
                 // if(proxy.polyphonic){
                 //     delete proxy.oscillators[frequencyKey]
@@ -126,14 +137,12 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
 
             },
 
-            // getAudioParam: (name: string): any[] => {
-            //     if(name==='gain'){ // get gain stage params
-            //         return Object.keys(this.audioEndpoints).map(key => this.audioEndpoints[key][name]);
-            //     }
-            //     else{
-            //         return Object.keys(this.oscillators).map(key => this.oscillators[key][name]);
-            //     }
-            // },
+            getAudioParam: (name: string): any[] => {
+                if(name==='duration'){
+                    return [{ value: this.$params.duration }];
+                }
+                return [this.audioEndpoints.default[name]];
+            },
 
             // initMulti_NOT_USING: (options?: any) => {
                 
@@ -242,7 +251,7 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
         });
 
         this.$type = 'Oscillator';
-        this.staticEndpoints = false;      
+        this.staticEndpoints = true;      
 
         //this.polyphonic = params.polyphonic;
 
@@ -254,18 +263,18 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
 
     }
 
-    attenuate(additionalFrequencyKeys: string[]) {
+    // attenuate(additionalFrequencyKeys: string[]) {
 
-        const activeKeys = Object.keys(this.oscillatorState).filter(key => this.oscillatorState[key] === 1)
-        const voiceCount = activeKeys.length + additionalFrequencyKeys.length
+    //     const activeKeys = Object.keys(this.oscillatorState).filter(key => this.oscillatorState[key] === 1)
+    //     const voiceCount = activeKeys.length + additionalFrequencyKeys.length
 
-        const partialGain = MAX_TOTAL_GAIN / voiceCount
+    //     const partialGain = MAX_TOTAL_GAIN / voiceCount
 
-        for(let key of activeKeys.concat(additionalFrequencyKeys)){
-            this.gainStage[key].gain.value = partialGain
-        }
+    //     for(let key of activeKeys.concat(additionalFrequencyKeys)){
+    //         this.gainStage[key].gain.value = partialGain
+    //     }
 
-    }
+    // }
     
 }
 

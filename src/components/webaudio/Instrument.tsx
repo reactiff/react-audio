@@ -19,6 +19,7 @@ export default (props: any) => {
             autoRelease: props.autoRelease,
             duration: props.duration,
             trackIndex: props.trackIndex,
+            trackName: props.trackName,
         }
     ));
 
