@@ -34,11 +34,20 @@ const Disclosure = (props: any) => {
     const component: any = Mpg.PropsParser.parse($class, props, $params)
 
     const location = useLocation()
-    const disclosureViewHash = location.pathname + '/' + props.viewKey + (props.caption ? '/' + toCamelCase(props.caption) : '')
-    const storedState = sessionStorage.getItem(disclosureViewHash) === 'true'
-    const restoreView = storedState && props.children
+    let disclosureViewHash: any = null;
+    
+    if(props.viewKey && props.caption) {
+        disclosureViewHash = location.pathname + '/' + props.viewKey + (props.caption ? '/' + toCamelCase(props.caption) : '');
+    }
+    
+    let storedState = null;
+    if(disclosureViewHash){
+        storedState = sessionStorage.getItem(disclosureViewHash) === 'true';
+    }
+    
+    let restoreView = storedState && props.children ? true : false;
 
-    const [viewOpen, setViewOpen] = useState(storedState)
+    const [viewOpen, setViewOpen] = useState(restoreView)
     const handleOpenView = () => {
 
         if(props.onClick){
@@ -53,12 +62,16 @@ const Disclosure = (props: any) => {
 
     const handleViewOpened = () => {
         props.onOpen && props.onOpen()
-        sessionStorage.setItem(disclosureViewHash, 'true')
+        if(disclosureViewHash){
+            sessionStorage.setItem(disclosureViewHash, 'true')
+        }
     }
 
     const handleViewClosed = () => {
         setViewOpen(false)
-        sessionStorage.setItem(disclosureViewHash, 'false')
+        if(disclosureViewHash){
+            sessionStorage.setItem(disclosureViewHash, 'false')
+        }
         props.onClose && props.onClose()
     }
 

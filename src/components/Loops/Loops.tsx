@@ -2,112 +2,117 @@ import React, { useRef } from 'react'
 import {useState, useEffect, useMemo} from 'react'
 import uuid from 'uuid/v4'
 
-import Mpg from './mpg/Mpg'
-import './css/loops.css'
-import { useWindowSize } from '../hooks/Hooks'
+import Mpg from '../mpg/Mpg'
+import './loops.css'
+import { useWindowSize } from '../../hooks/Hooks'
 
 import CircularTrack from './CircularTrack'
-import Playback from './Loops/Playback'
+import Playback from './Playback'
 
-import Analyzer from './webaudio/Analyzer';
-import AudioContext from './webaudio/AudioContext';
-import AudioSource from './webaudio/AudioSource';
-import Constant from './webaudio/Constant';
-import Delay from './webaudio/Delay';
-import Feedback from './webaudio/Feedback';
-import Filter from './webaudio/Filter';
-import { FilterType } from './webaudio/modules/FilterModule';
-import Gain from './webaudio/Gain';
-import Instrument from './webaudio/Instrument';
-import Noise from './webaudio/Noise';
-import Oscillator from './webaudio/Oscillator';
-import Param from './webaudio/Param';
-import Position from './webaudio/Position';
-import Recorder from './webaudio/Recorder'
-import Slider from './webaudio/Slider';
-import Split from './webaudio/Split';
-import Stereo from './webaudio/Stereo';
-import {TransitionMethod} from './webaudio/modules/ParamModule';
-import Inline from '../shared/Inline'
+import Analyzer from '../webaudio/Analyzer';
+import AudioContext from '../webaudio/AudioContext';
+import AudioSource from '../webaudio/AudioSource';
+import Constant from '../webaudio/Constant';
+import Delay from '../webaudio/Delay';
+import Feedback from '../webaudio/Feedback';
+import Filter from '../webaudio/Filter';
+import { FilterType } from '../webaudio/modules/FilterModule';
+import Gain from '../webaudio/Gain';
+import Instrument from '../webaudio/Instrument';
+import Noise from '../webaudio/Noise';
+import Oscillator from '../webaudio/Oscillator';
+import Param from '../webaudio/Param';
+import Position from '../webaudio/Position';
+import Recorder from '../webaudio/Recorder'
+import Slider from '../webaudio/Slider';
+import Split from '../webaudio/Split';
+import Stereo from '../webaudio/Stereo';
+import {TransitionMethod} from '../webaudio/modules/ParamModule';
+import Inline from '../../shared/Inline'
+
+import ProjectSettings from './ProjectSettings'
 
 const inputArray = [
   '1000000000000000',
 ]
+
+const staticProjectData = {
+
+  name: 'Untitled Project',
+  tempo: 120,
+  bars: 4,
+
+  tracks: [
+
+    { id: "kick1", name: 'Track 0', beats: 16, measures: {}, foundation: true },
+
+    // { beats: 16, measures: {}},
+    // { beats: 16, measures: {}},
+    
+  ], 
+
+  instruments: [],
+
+};
+
 export default (props: any) => {
 
-  const tracks = useRef<any[]>([
-
-    { id: "kick1", beats: 16, measures: {}, inputArray: inputArray, foundation: true },
-    // { id: "kick2", beats: 12, measures: {}},
-
-    { id: "snare1", beats: 16, measures: {}},
-    //{ id: "snare2", beats: 20, measures: {}},
-
-    // { id: "hihat1", beats: 16, measures: {}},
-    { id: "hihat2", beats: 32, measures: {}},
-    //{ id: "hihat3", beats: 28, measures: {}},
-    
-  ]);
-
+  const project = useRef<any>({ tracks: [] });
+  const [projectRevision, setProjectRevision] = useState(0);
+  
   const [playbackState, setPlaybackState] = useState(0)
+  
   const [bpm, setBpm] = useState(100)
     
   const [currentMeasureNumber, setCurrentMeasureNumber] = useState(0)
-  const [currentMeasure, setCurrentMeasure] = useState<any[]>([])
-  const [currentBeat, setCurrentBeat] = useState<number | null>(null)
   
   const windowSize = useWindowSize()
   const maxDiameter = Math.min(windowSize.width, windowSize.height - 55 - 30)
   const maxRadius = maxDiameter / 2 
-  const trackWidth = Math.min((maxRadius - 60) / (tracks.current.length ), 60);
+  const trackWidth = Math.min((maxRadius - 60) / (project.current.tracks.length ), 60);
   
 
   // handlers
   const handleMeasureNumberChange = (measureNumber: number) => {
     setCurrentMeasureNumber(measureNumber);
   }
-  
-
   const handlePlayStop = () => {
     playbackRef.current.trigger();
   }
-  
   const handleRegisterInstrument = (inst: any) => {
+    
+    project.current.instruments.push(inst);
 
-    const track = playbackRef.current.tracks.find((tr: any) => tr.id === inst.$params.trackName)
-
+    const track = project.current.tracks.find((tr: any) => tr.instrumentId === inst.$params.trackName)
     if(track){
       track.instrument = inst;
     }
-    
-
   }
 
   const playbackRef = useRef<any>(new Playback());
+  project.current = React.useMemo(()=>{
+    return staticProjectData;
+  },[]);
+
+
+  project.current.onChange = () => {
+    setProjectRevision(r => r + 1);
+  };
 
   useEffect(()=>{
 
     //playback component
     playbackRef.current.subscribe('onStateChange', setPlaybackState);
     playbackRef.current.subscribe('onMeasureNumberChange', handleMeasureNumberChange);
-    
-    playbackRef.current.setTracks(tracks.current);
-    
+    playbackRef.current.setProject(project);
 
   },[]);
   
-
   //memoized
   const playButton = useMemo(() => {
     let icon = Inline.switch(playbackState, 'play', 1, 'stop', 2, 'play-circle')
     return <Mpg.FontAwesomeIcon icon={icon} size="2x"/>
   }, [playbackState])
-
-  // if(currentMeasure.length===0){
-  //   return null;
-  // }
-
-  
 
   return <>
 
@@ -193,6 +198,33 @@ export default (props: any) => {
       </Mpg.div>
 
 
+      <Mpg.Flex className="toolbar top" row justifyContent="center" alignItems="center" wide absolute anchorTop padding={20}>
+
+        <Mpg.div width={40}>
+          &nbsp;
+        </Mpg.div>
+
+        <Mpg.div grow>
+          &nbsp;
+        </Mpg.div>
+
+        <Mpg.div>
+          <Mpg.Flex bgColor="black" width={50} height={50} round justifyContent="center" alignItems="center">
+            {project.current.tempo}
+          </Mpg.Flex>
+        </Mpg.div>
+
+        <Mpg.div grow>
+          &nbsp;
+        </Mpg.div>
+
+        <Mpg.div>
+          <Mpg.Disclosure width={40}>
+            <ProjectSettings project={project.current} />
+          </Mpg.Disclosure>
+        </Mpg.div>
+
+      </Mpg.Flex>
 
       <Mpg.div className="loop-wheel-container" width={maxDiameter} height={maxDiameter}>
         {/* LOOP WHEEL */}
@@ -200,7 +232,7 @@ export default (props: any) => {
           <svg width={maxDiameter} height={maxDiameter}>
 
             {
-              tracks.current.map((track, index) => {
+              project.current.tracks.map((track: any, index: number) => {
 
                 // const _current_measure_ = currentMeasure;
                 // const _track_index_= index;

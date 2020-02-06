@@ -1,7 +1,7 @@
 import React from 'react'
 import {useState, useEffect, useRef} from 'react'
 
-import Env from '../shared/Env'
+import Env from '../../shared/Env'
 import getTrackColors from './getTrackColors'
 
 export default (props: any) => {

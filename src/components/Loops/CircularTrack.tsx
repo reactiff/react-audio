@@ -1,11 +1,11 @@
 import React from 'react'
 import {useState, useEffect, useMemo, useRef} from 'react'
-import Mpg from './mpg/Mpg'
+import Mpg from '../mpg/Mpg'
 import uuid from 'uuid/v4'
 
 import CircularTrackSegment from './CircularTrackSegment'
 
-import './css/circulartrack.css'
+import './circulartrack.css'
 
 export default (props: any) => {
 

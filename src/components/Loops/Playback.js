@@ -21,12 +21,11 @@ export default class Playback {
 
         this.timer = null;
 
-        this.tracks = {};
+        this.projectRef = {};
         this.foundationTrack = null;
         this.trackGroups = [];
 
-        this.tempo = 80;
-        this.measureCount = 1;
+        
         this.prevMeasureNumber = 0;
         this.measureNumber = 0;
         
@@ -36,6 +35,22 @@ export default class Playback {
         this.stepActivationCallbacks = {};
 
         this.initialized = false;
+    }
+
+    get tracks() {
+        return this.projectRef.current.tracks;
+    }
+    get tempo() {
+        return this.projectRef.current.tempo;
+    }
+    get measureCount() {
+        return this.projectRef.current.bars;
+    }
+
+
+    setProject(projectRef) {
+        this.projectRef = projectRef;
+        this.foundationTrack = this.tracks.find(t=>t.foundation);
     }
 
     getTrackData(measureNumber) {
@@ -370,10 +385,7 @@ export default class Playback {
         this.measureCount = count;
     }
 
-    setTracks(tracks) {
-        this.tracks = tracks;
-        this.foundationTrack = this.tracks.find(t=>t.foundation);
-    }
+    
 
     setNoteSelected(trackId, beatIndex, value){
 
