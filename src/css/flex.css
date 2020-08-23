@@ -5,15 +5,18 @@
 .flex.column { flex-direction: column; }
 .flex.wrap { flex-wrap: wrap; }
 .flex.nowrap { flex-wrap: nowrap; }
-.flex.justify.start:not(.self) { justify-content: flex-start; }
-.flex.justify.center:not(.self) { justify-content: flex-start; }
-.flex.justify.end:not(.self) { justify-content: flex-start; }
-.flex.align.start:not(.self) { align-content: flex-start; }
-.flex.align.center:not(.self) { justify-content: flex-start; }
-.flex.align.end:not(.self) { justify-content: flex-start; }
+.flex.justify-start:not(.self) { justify-content: flex-start; }
+.flex.justify-center:not(.self) { justify-content: center; }
+.flex.justify-end:not(.self) { justify-content: flex-end; }
+.flex.align-start:not(.self) { align-items: flex-start; }
+.flex.align-center:not(.self) { align-items: center; }
+.flex.align-end:not(.self) { align-items: flex-end; }
 .align.self.start { align-self: flex-start; }
 .align.self.center { align-self: center; }
 .align.self.end { align-self: flex-end; }
 .align.self.stretch { align-self: stretch; }
 .flex > .grow { flex-grow: 1; }
 .flex > .shrink { flex-shrink: 1; }
+.flex.row.spaced>*:not(:last-child) { margin-right: 5px; }
+.flex.column.spaced>*:not(:last-child) { margin-bottom: 5px; }
+.flex.cell { justify-content: center; align-items: center;}
