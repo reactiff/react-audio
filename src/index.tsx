@@ -6,10 +6,8 @@ import { BrowserRouter } from 'react-router-dom'
 import './css/index.css';
 import './css/declarative.css';
 import './css/flex.css';
-// import './css/hamburgers.css';
-// import './css/typography.css';
 
-import App from './components/App';
+import App from './App';
 // import Song from './components/Song';
 // import Primes from './components/Primes';
 // import Synth from './components/Synth';

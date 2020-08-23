@@ -1,0 +1,16 @@
+.analyzer-container {
+    
+    background-color: rgba(0,0,0,0.5);
+
+    width: 800px;
+    height: 300px;
+
+}
+
+
+.analyzer-canvas {
+    
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.5);
+
+}

@@ -1,0 +1,68 @@
+.mpg-navbar {
+    position: fixed;
+    z-index: 9999;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.mpg-navbar .nav-item {
+    background-color: #000;
+    flex-grow: 1;
+    
+}
+.mpg-navbar .nav-item.spacer {
+    display: none;
+    flex-grow: 1;
+}
+
+
+.mpg-navbar .nav-item .nav-link {
+    border-radius: 0;
+    padding: 0;
+    font-size: 0.675rem;
+    height: 62px;
+}
+
+.mpg-navbar .nav-item .nav-link .svg-inline--fa {
+    color: rgba(128,128,128,0.5);
+}
+
+.mpg-navbar .nav-item .nav-link.active .svg-inline--fa {
+    color: rgba(255,255,255,1);
+}
+
+.mpg-navbar .nav-item .nav-link {
+    color: rgba(255,255,255,1);
+}
+
+@media only screen and (min-width: 768px) {
+
+    .mpg-navbar {
+        bottom: unset;
+        top: 0;
+    }
+    .mpg-navbar .nav-item {
+        flex-grow: unset;
+        
+    }
+    .mpg-navbar .nav-item.spacer {
+        display: unset;
+    }
+    
+    .mpg-navbar .nav-item .nav-link {
+        padding: .5rem 2rem;
+    }
+
+}
+
+.mpg-navbar.fixed-top {
+    bottom: unset;
+    top: 0;
+}
+
+.mpg-navbar.fixed-bottom {
+    top: unset;
+    bottom: 0;
+}
+
