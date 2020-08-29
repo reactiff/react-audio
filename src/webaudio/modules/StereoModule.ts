@@ -8,21 +8,22 @@ class StereoModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: () => {
+
                 return new Promise(resolve => {
                     
                     if (proxy.context.createStereoPanner) {
-                        proxy.audioEndpoints.default = proxy.context.createStereoPanner();
+                        proxy.ownEndpoints.default = proxy.context.createStereoPanner();
 
                         //set params
                         for(let key in params){
                             if(params.hasOwnProperty(key)){
                                 try{
-                                    proxy.audioEndpoints.default[key].value = params[key];
+                                    proxy.ownEndpoints.default[key].value = params[key];
                                 }
                                 catch(ex){ 
                                     try{
-                                        proxy.audioEndpoints.default[key] = params[key];
+                                        proxy.ownEndpoints.default[key] = params[key];
                                     }
                                     catch(ex){
                                         throw new Error('Invalid param ' + key);
@@ -39,17 +40,11 @@ class StereoModule extends BaseAudioGraphNodeModule {
                         panner.panningModel = 'equalpower';
                         const value = params.pan;
                         panner.setPosition(value, 0, 1 - Math.abs(value));
-                        proxy.audioEndpoints.default = panner;
+                        proxy.ownEndpoints.default = panner;
                     }
                     resolve();
                 });
-
-                
-
-                
-                
             }
-
         });
 
         this.$type = 'Stereo';

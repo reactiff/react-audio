@@ -1,50 +1,86 @@
 import uuid from 'uuid/v4'
 import Log from './Log';
 
+type Dictionary = { [index: string]: any };
+
 class BaseAudioGraphNodeModule {
     
     $type: string = 'BaseAudioGraphNodeModule';
     $params: any;
     
-    name: string;
+    name: string | null = null;
+    purpose: string | null = null;
 
     id: string;
+    $tag: string;
+    
+    ownEndpoints: Dictionary = {};
+    receivedEndpoints: Dictionary = {};
 
-    // audioEndpoint: any; // single endpoint no more
-    // inputEndpoints: any[] = []; // rename...
-    audioEndpoints: any = {}; // From now on, everything has multiple endpoints
-    staticEndpoints: boolean = false;
+    // staticEndpoints: boolean = false;
     polyphonic: boolean = false;
     target: any;
     context: any;
     operations: any;
-    sources: any[] = [];
-    listeners: any[] = [];
-    inputSources: any[] = [];
+
+    sources: any = {};
+    listeners: any = {};
+    inputSources: any = {};
+
+    initializedParams: { [index: string]: boolean } = {};
+
     binding: any;
-    autoRelease?: boolean;
     signalSource: any;
     frequencyArray: number[] = [];
-    
+    adsr: { a: number, d: number, s: number, r: number } = { a: 0, d: 0, s: 0.8, r: 0.2 };
+
     constructor(
         target: any, 
         audioContext: any, 
         params: any, 
         operations: any) 
     {
-        this.id = params.id || uuid();
         this.target = target;
         this.context = audioContext;
         this.$params = params;
         this.operations = operations;
-        this.name = params.name;
+
+        // set all properties using params
+        const _this: { [index: string]: any } = this;
+        for (let key in params) {
+            const p = params[key];
+            if (typeof p !== 'undefined') {
+                if (typeof p === 'object') {
+                    if (_this[key]) {
+                        // allow partial params i.e. copy base then assign available keys only
+                        const object = _this[key] ? {..._this[key]} : {};
+                        Object.assign(object, p);
+                        _this[key] = object;    
+                    }
+                    else {
+                        _this[key] = p;
+                    }
+                }
+                else {
+                    _this[key] = p;
+                }
+            }   
+        }
+
+        this.id = params.id || uuid();
+        this.$tag = params.tag;
+
+    }
+
+    getValue() {
+        return this.$params.value;
     }
 
     getAudioParam(name: string): any[] {
         if(this.operations.getAudioParam){
             return this.operations.getAudioParam(name);
         }
-        return Object.keys(this.audioEndpoints).map(key => this.audioEndpoints[key][name]);
+        return Object.keys(this.ownEndpoints).map((key: string) => this.ownEndpoints[key][name]);
     }
 
     getDescription() {
@@ -55,246 +91,279 @@ class BaseAudioGraphNodeModule {
         return this.$type + (description ? '[' + description + ']' : '');
     }
 
-    async init(options?: any | null) {
+    getShortDescription() {
+        if (this.name) return this.name;
+        if (this.$params.purpose) return this.$params.purpose;
+        return this.$type;
+    }
+
+    init(options?: any | null) {
+
         const thisModule =  this;
         return new Promise(async (resolve) => {
 
-            Log.initialization(thisModule, options);
+            // Log.initialization(thisModule, options);
 
-            if(!thisModule.staticEndpoints){
-                thisModule.audioEndpoints = {}; // do not reset, some nodes mainain persistent instances
-            }
-
+            thisModule.ownEndpoints = {}; 
+            thisModule.inputSources = {};
+            thisModule.initializedParams = {};
+            
             if(thisModule.operations.init){
                 await thisModule.operations.init(options);
             }
-
-            //if (thisModule.listeners.length) debugger;
             
-            await Promise.all(thisModule.sources.map((source: BaseAudioGraphNodeModule) => source.init(options)));
-            await Promise.all(thisModule.listeners.map((listener: any) => listener.init(options)));
+            await Promise.all(
+                Object.values(thisModule.sources).map(
+                    (source: any) => source.init(options)
+                )
+            );
+
+            await Promise.all(
+                Object.values(thisModule.listeners).map(
+                    (listener: any) => listener.init(options)
+                )
+            );
+
+
+            if (thisModule.target && thisModule.target.$type === 'AudioGraph' && thisModule.$type === 'Instrument') {
+                await thisModule.target.init(options);
+            }
 
             resolve();
         });
     }
 
-    passThrough(source: any) {
-
-        if (this.$type === 'StreamPlayer') debugger;
-
-        debugger;
-
-        // I am not sure this works correctly.  This methods calls itself on the target.  So when does a target  actually connect the source to it's endpoint?  I think this should only happen on the first cycle, and the next node should receive the source.  But then, we can implement the skip inside the receive function.
+    passThrough(source: BaseAudioGraphNodeModule) {
 
         Log.passThrough(this, source);
 
-        //unlike receive method, passthrough method patches the connection thru to the target's audionode, whereas receive, enqueues connections preparing for them to be made when its time
-        //the goal here is to connect directly to the first AudioNode we find crawling upstream
+        // If this node has a target, pass the source through to it
+        if(this.target && this.target.passThrough){
+            this.target.passThrough(source);
+        }
+        else if(Object.keys(this.ownEndpoints).length){
 
-        const thisModule =  this;
+            // otherwise connect to own endpoints
+            debugger;
 
-        if(Object.keys(this.audioEndpoints).length){
-
-            debugger // WHY ARE WE HERE? This logic does not jive with the above description of PATCHING THRU
-
-            const incomingEndpoints = source.getEndPoints();
-            for(let incoming of incomingEndpoints){
-                for(let ep of this.audioEndpoints){
-                    incoming.connect(ep);
+            const sourceEndpoints = source.getEndPoints();
+            for(let sourceEndpoint of sourceEndpoints){
+                for(let ownEndpoint of Object.values(this.ownEndpoints)){
+                    sourceEndpoint.connect(ownEndpoint);
                 }
             }
 
         }
-        else if(this.target && this.target.passThrough){
-            this.target.passThrough(source);
-        }
 
-        //if (this.listeners.length) debugger;
-
-        for(let d of this.listeners){
-            d.passThrough(source);
+        for(let d of Object.values(this.listeners)){
+            (d as BaseAudioGraphNodeModule).passThrough(source);
         }
 
     }
 
     receive(source: any) {
 
+        //if (this.$type === 'Param') debugger;
+
         Log.receive(this, source);
 
         const thisModule =  this;
 
         return new Promise(async (resolve) => {
+   
+            if (thisModule.inputSources.hasOwnProperty(source.id)) {
 
-            let inputEndpoints;
-            //let sourceDescriptor;
+                // make sure that the source doesn't have any new endpoints
+                debugger;
 
-            thisModule.inputSources.push(source);
+                resolve();
+                return;
+            }
 
+            thisModule.inputSources[source.id] = source;
+
+            let sourceEndpoints;
+            let description;
             if(source instanceof AudioNode){
-                //sourceDescriptor = 'AudioNode';
-                inputEndpoints = [source];
+                description = typeof source;
+                sourceEndpoints = [source];
             }
             else{
-                //sourceDescriptor = source.getDescription();
-                inputEndpoints = source.getEndPoints();
+                description = source.getShortDescription();
+                sourceEndpoints = source.getEndPoints();
             } 
 
-            //if(thisModule.audioEndpoint){ //this used to check if module has an audio endpoint
 
-            // The received source should be connected to local endPoints, not become endPoints.
+            const ownEndPoints = Object.values(thisModule.ownEndpoints);
+            if(ownEndPoints.length) {
+                for(let sourceEp of sourceEndpoints){
+                    for(let ownEp of ownEndPoints) {
 
-
-            // if(Object.keys(thisModule.audioEndpoints).length) {
-
-            for(let input of inputEndpoints){
-                for(let key of Object.keys(thisModule.audioEndpoints)){
-                    input.connect(thisModule.audioEndpoints[key]);
+                        // Log.write(' connect ' + source + '.' + key + ' -- to --> ' + thisModule.getDescription());
+                        sourceEp.connect(ownEp);
+                    }
                 }
+            } else {
+                let j = sourceEndpoints.length;
+                while (j--) {
+                    let sourceEp = sourceEndpoints[j];
+                    const key =  description;
+                    thisModule.receivedEndpoints[key] = sourceEp;
+                }
+                
             }
-                
-            // }
-            // else{
-
-                
-            // for(let input of inputEndpoints){
-
-            //     const key = input.id || Object.keys(thisModule.audioEndpoints).length;
-            //     thisModule.audioEndpoints[key] = input;
-            // }
-                
-            // }
 
             resolve();
 
         });
     }
 
-    async connect() {
-
-        // if (this.$type === 'StreamPlayer') debugger;
+    connect() {
 
         const thisModule =  this;
 
         return new Promise(async (resolve)=>{
-            
-            
-            
 
+            console.log(this.getShortDescription() + ' -> BEGIN connect()');
             
-            for(let src of thisModule.sources){
-                await src.connect();
+            // tell sources to make connections
+            for(let src of Object.values(thisModule.sources)) {
+                await (src as BaseAudioGraphNodeModule).connect().catch(reason => {
+                    debugger;
+                    console.log(reason)
+                });
             }
 
+            // then connect self
             if(thisModule.operations.connect) {
-                thisModule.operations.connect();
+                await thisModule.operations.connect().catch(
+                    (reason: any) => {
+                        debugger;
+                        console.log(reason);
+                    });
             }
             else{
-                await thisModule.target.receive(thisModule);
+                await thisModule.target.receive(thisModule).catch(
+                    (reason: any) => {
+                        debugger;
+                        console.log(reason);
+                    });
             }
 
-            for(let d of thisModule.listeners){
-                await d.receive(thisModule);
+            // connect to listeners
+            for(let d of Object.values(thisModule.listeners)){
+                await (d as BaseAudioGraphNodeModule).receive(thisModule).catch(
+                    (reason: any) => {
+                        debugger;
+                        console.log(reason);
+                    });
             }
+            
+            console.log(this.getShortDescription() + '   RESOLVE connect()');
 
-            
-            
             resolve();
         });
         
     }
 
-    start(time: number, options?: any, autoReleaseDelayMs?: number) {
+    start(time: number, options?: any) {
 
-
-        // if (this.$type === 'StreamPlayer') debugger;
-
-        Log.start(this, time, options);
-
-        if(this.operations.start){
-            this.operations.start(time, options);
-        }
+        let sustained: any[] = [];
         
         // start sources
-        for(let src of this.sources){
-            src.start(time, options);
+        for(let src of Object.values(this.sources)) {
+            const notes = (src as BaseAudioGraphNodeModule).start(time, options);
+            if (notes.length) {
+                sustained = sustained.concat(notes);
+            }
         }
 
-        const thisModule: any = this;
-
-        if(typeof autoReleaseDelayMs !== 'undefined'){
-            setTimeout(opt => thisModule.stop(opt), autoReleaseDelayMs, options)
+        // then start self
+        if(this.operations.start){
+            const note = this.operations.start(time, options);
+            if (note) {
+                sustained = sustained.concat([note]);
+            }
         }
 
-        //return release call
-        return () => thisModule.stop(options);
-
+        return sustained;
     }
 
     stop(options?: any) {
 
-        Log.stop(this, options);
+        // stop sources
+        for(let src of Object.values(this.sources)){
+            (src as BaseAudioGraphNodeModule).stop(options);
+        }
 
+        // then stop self
         if(this.operations.stop){
             this.operations.stop(options);
         }
-        
-        // stop sources
-        for(let src of this.sources){
-            src.stop(options);
-        }
 
     }
 
+    evalParam(param: any, options: any, defaultValue: any) {
+        const T = typeof param;
+        if (T === 'undefined') return defaultValue;
+        if (T !== 'string') return param;
+        const f = this.$params.frequency || (options && options.frequency);
+        const script = (param as string).replace(/\bf\b/g, f);;
+        return window.eval(script);
+    }
+
+    // instrument only
     async trigger(options?: any | null) {
-        return await this.operations.trigger(options);
+        const sustained = await this.operations.trigger(options);
+        const map = sustained.reduce((a: any, b: any) => Object.assign({}, a, { [b.id]: b }), {});
+        return map;
     }
-
-    
+    async release(options?: any | null) {
+        await this.operations.release(options);
+    }
+        
     async resume() {
-
         this.context.resume();
-
-    }
-
-    async registerBinding(source: any) {
-        await this.target.registerBinding(source);
     }
 
     async registerSource(source: any) {
 
+        if (source.hasOwnProperty(source.id)) return;
+
         Log.registerSource(this, source);
 
-        this.sources.push(source);
+        this.sources[source.id] = source;
 
         if(source.binding){
-            await this.target.registerBinding(source);
+            const root: any = this.findParent(node => !!node.registerBinding);
+            await root.registerBinding(source);
         }
-
+    }
+    
+    async registerAsInstrument() {
+        const root: any = this.findParent(node => !!node.bindChromaticInstrument);
+        await root.bindChromaticInstrument(this);
     }
 
-    async registerListener(aux: any) {
 
-        this.listeners.push(aux);
-        
+    async registerListener(aux: BaseAudioGraphNodeModule) {
+        if (this.listeners.hasOwnProperty[aux.id]) return;
+        this.listeners[aux.id] = aux;
     }
 
     getEndPoints() {
         if(this.operations.getEndPoints){
             return this.operations.getEndPoints();
         }
-        return Object.keys(this.audioEndpoints).map(key => this.audioEndpoints[key]);
+        return Object.values(this.ownEndpoints);
     }
 
     traverseSources(test: {(node:any): boolean}, select:{(node:any): void}){
-
-        for(let src of this.sources){
-        
+        for(let src of Object.values(this.sources)){
             if(test(src)){
                 select(src);
             }
-
-            src.traverseSources(test, select);
-        
+            (src as BaseAudioGraphNodeModule).traverseSources(test, select);
         }
     }
 
@@ -316,11 +385,14 @@ class BaseAudioGraphNodeModule {
         }
         return null;
     }
-    findParent(type: string, name?:string){
-        if(name){
-            return this.findParentByTypeAndName(type, name);
+    findParent(match: {(x: any) : boolean}) : BaseAudioGraphNodeModule | null {
+        if (match(this)) {
+            return this;
         }
-        return this.findParentByType(type);
+        if (this.target) {
+            return this.target.findParent(match);
+        }
+        return null;
     }
 
 }

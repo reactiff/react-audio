@@ -1,84 +1,112 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-// import AudioNode from './AudioNode'
-import renderChildren from './renderChildren'
-import './css/instrument.css'
-import AudioGraphInstrumentModule from './modules/InstrumentModule';
+import './css/instrument.css';
+import InstrumentModule from './modules/InstrumentModule';
+import paramsFromProps from './paramsFromProps'
+
+import ui from '../mpg/Mpg';
+
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
 export default (props: any) => {
+    
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
+    const graph = target.findParent((node: any) => node.$type === 'AudioGraph');
 
-    if(!props.context){
-        return null
-    }
-
-    const proxy = useRef<AudioGraphInstrumentModule>(new AudioGraphInstrumentModule(
-        props.target,
-        props.context,
-        {
-            name: props.name || 'Unnamed instrument',
-            signalSource: props.signalSource,
-            autoRelease: props.autoRelease,
-            duration: props.duration,
-            trackIndex: props.trackIndex,
-            trackName: props.trackName,
-            chromatic: typeof props.chromatic === 'undefined' ? true : props.chromatic,
-            octave: props.octave || 4,
-        }
+    const [proxy] = React.useState(new InstrumentModule(
+        target,
+        context,
+        paramsFromProps(
+            props, 
+            {}, 
+            {
+                duration: 0.1,
+                octave: 4,
+            }
+        )
+        
     ));
 
-    proxy.current.binding = props.binding;
-    proxy.current.autoRelease = props.autoRelease;
+    const [status, setStatus] = React.useState('');
 
     useEffect(()=>{
         
         //register as Instrument with Transport
-        if(props.target.findParent){
-            const transport = props.target.findParent('Transport');
-            if (transport) {
-                transport.registerInstrument(proxy.current);
-            }
-        }
 
-        if(props.registerInstrument) {
-            props.registerInstrument(proxy.current);
-        }
+        // DO WE NEED THIS?
+        // if(target.findParent){
+        //     const transport = target.findParent('Transport');
+        //     if (transport) {
+        //         transport.registerInstrument(proxy);
+        //     }
+        // }
+
+        // WHY IS THIS ON PROPS?
+        // if(props.registerInstrument) {
+        //     props.registerInstrument(proxy);
+        // }
 
         //register as Source
-        props.target.registerSource(proxy.current);
+        target.registerSource(proxy);
+
+        proxy.registerAsInstrument();
 
 
     },[]);
-    
-    let triggerButton = null;
-    let triggerKey = null;
-
-    const trigger = (e: any)=> {
-
-        props.context.resume();
-        proxy.current.trigger()
-
+        
+    const start = (e: any) => {
+        if (context.state !== 'running') {
+            context.resume();
+        }
+        if (status !== 'suspended') {
+            proxy.trigger({hold: true, adsr: {s: 1} });
+        }
+        setStatus('playing');
+    }
+    const stop = (e: any) => {
+        // proxy.stop();
+        context.suspend();
+        setStatus('suspended');
     }
 
-    if(props.context) {
+    // const selected = graph.selectedInstrument.id === proxy.id;
+    
+    return (
+        <parentContext.Provider value={proxy}>
+            <div className="instrument">
 
-         triggerButton = (
-            <div key="-1" className="trigger">
-                <div className="buttons">
-                    <div className="button play" onMouseDown={trigger}></div>
+                {/* {
+                    !selected &&
+                    <ui.Button onClick={() => proxy.registerAsInstrument()} text="Select" />
+                } */}
+                
+                <div className="grow">
+                    {proxy.name}
+                </div>
+
+                
+                <div className="rack group">
+                    {props.children}
+                </div>
+                
+                
+                <div key="-1" className="trigger">
+                    <div className="buttons">
+                        {
+                            status !== 'playing' && 
+                            <div className="button play" onMouseDown={start}></div>
+                        }
+                        {
+                            status === 'playing' && 
+                            <div className="button stop" onMouseDown={stop}></div>
+                        }
+                    </div>
                 </div>
             </div>
-        )
-
-    }
-
-    const children: any = useMemo(() => renderChildren(props.children, {
-        context: props.context,
-        target: proxy.current
-    }), [])
-
-    return <div className="instrument flex row tight">
-        {children}
-        {triggerButton}
-    </div>
+        </parentContext.Provider>
+    );
+    
         
     
 }

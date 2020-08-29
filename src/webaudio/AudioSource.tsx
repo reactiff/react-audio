@@ -1,21 +1,15 @@
 import React, {ReactElement} from 'react';
-
-import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
-
 import AudioSourceModule from './modules/AudioSourceModule';
-
-
 import './css/audiofile.css'
 
-type PropsType = {
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
-    //standard props
+type PropsType = {
     children?: any,
     context?: AudioContext,
     target?: any,
-
-    //specific
     src: string
     name?: string
     controls?: boolean
@@ -24,35 +18,21 @@ type PropsType = {
   
 export default (props: PropsType) => {
 
-    let children = null;
-
-    let element: ReactElement | null = null;
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
+    const [proxy] = React.useState(new AudioSourceModule(
+        target,
+        context,
+        paramsFromProps(props, {})
+    ));
     
-    let proxy: AudioSourceModule | null = null;
-
-    if(props.context){
-    
-        const elementRef: any = React.createRef();
-
-        proxy = new AudioSourceModule(
-            props.target,
-            props.context,
-            paramsFromProps(props, {elementRef: elementRef})
-        );
-        
-        props.target.registerSource(proxy);
-
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
-
+    target.registerSource(proxy);
+ 
     return (
-        <div className="audio-source">
-           {children}
-        </div>
-        
+        <parentContext.Provider value={proxy}>
+            <div className="audio-source">
+                {props.children}
+            </div>
+        </parentContext.Provider>
     );
 }

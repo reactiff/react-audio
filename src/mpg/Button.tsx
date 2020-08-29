@@ -7,6 +7,7 @@ const $description = '';
 const $params = {
     // onClick: { type: 'function' },
     link: { type: 'boolean' },
+
 } 
 
 
@@ -33,6 +34,7 @@ export default (props: any) => {
             style={component.style}
             className={component.classes.join(' ')} 
         >
+            {props.text}
             {props.children}
         </Button>
     )

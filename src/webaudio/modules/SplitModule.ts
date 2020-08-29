@@ -10,25 +10,29 @@ export class SplitInputModule extends BaseAudioGraphNodeModule {
 
             connect: () => {
 
-                const inputs = proxy.getEndPoints();
+                return new Promise(async (resolve)=>{
+                    
+                    const inputs = proxy.getEndPoints();
 
-                const entryNodes: any[] = []
-                
-                for(let rn of proxy.target.returnNodes){
-                    entryNodes.push(...rn.getEntryNodes())
-                }
+                    const entryNodes: any[] = []
+                    
+                    for(let rn of proxy.target.returnNodes){
+                        entryNodes.push(...rn.getEntryNodes())
+                    }
 
-                if(entryNodes.length){
-                    for(let entry of entryNodes){
-                        for(let input of inputs){
-                            entry.receive(input);
+                    if(entryNodes.length){
+                        for(let entry of entryNodes){
+                            for(let input of inputs){
+                                entry.receive(input);
+                            }
                         }
                     }
-                }
-                else{
-                    proxy.target.receive(proxy);
-                }
+                    else{
+                        proxy.target.receive(proxy);
+                    }
                 
+                    resolve();
+                });
                 
             }
 

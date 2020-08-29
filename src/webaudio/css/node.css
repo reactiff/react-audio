@@ -1,0 +1,35 @@
+.ag-node {
+
+    /* background-color: #00000044; */
+
+}
+
+.ag-node > .upstream {
+    
+    /* padding: 10px; */
+    box-sizing: border-box;
+    margin-bottom: 5px;
+}
+
+.ag-node > .node{
+
+    background-color: #00000044;
+
+}
+
+.ag-node .upstream {
+    margin-bottom: 5px;
+}
+.ag-node .upstream > .flex.row > * {
+    flex-grow: 1;
+}
+
+
+.rack.group {
+    /* background-color: #00000044; */
+    padding: 10px;
+    box-sizing: border-box;
+}
+.rack > div:not(:last-child) {
+    margin-bottom: 5px;
+}

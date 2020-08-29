@@ -1,97 +1,35 @@
 import React from 'react';
-
-import FeedbackModule, {FeedbackReturnModule} from './modules/FeedbackModule';
-
-import renderChildren from './renderChildren'
+import FeedbackModule from './modules/FeedbackModule';
 import paramsFromProps from './paramsFromProps'
-
 import './css/gain.css'
 
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+
 type FeedbackPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
     name?: string
 }
 
-export default class Feedback extends React.Component {
+export default (props: FeedbackPropsType) => {
 
-    renderedChildren: any = null;
-    proxy: any = null;
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
 
-    constructor(props: FeedbackPropsType) {
-        super(props)
+    const [proxy] = React.useState(new FeedbackModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        this.proxy = new FeedbackModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
-
-        props.target.registerSource(this.proxy);
+    target.registerSource(proxy);
         
-        this.renderedChildren = renderChildren(this.props.children, {
-            context: props.context,
-            target: this.proxy
-        })   
-    }
-    
-    static get Return() {
-        return FeedbackReturn;
-    }
-
-    render(){
-
-        return (
-            <div className="feedback">
-                {
-                    this.renderedChildren
-                }
-            </div>
-        );
-
-    }
-
-}
-
-type FeedbackReturnPropsType = {
-    //standard props
-    children?: any,
-    context?: AudioContext,
-    target?: any
-
-    for?: string
-}
-const FeedbackReturn = (props: FeedbackReturnPropsType) => {
-
-    let children = null;
-
-    if(props.context){
-        
-        const proxy = new FeedbackReturnModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
-
-        const parent = props.target.findParent('Feedback', props.for);
-        parent.registerReturnNode(proxy);
-
-        props.target.registerSource(proxy);
-        
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
-    
     return (
-        <div className="feedback-return">
-            {children}
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="feedback">
+                {props.children}
+            </div>    
+        </parentContext.Provider>
+        
     );
 }

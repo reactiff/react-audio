@@ -66,9 +66,8 @@ export default React.forwardRef((props: any,ref: any) => {
         </Row>
     }
 
-    return (
-        
-        <Tab.Container defaultActiveKey={activeKey} ref={ref}>
+    return <div ref={ref}>
+        <Tab.Container defaultActiveKey={activeKey}>
             <div className="mpg-tabs">
                 <Row>
                     <Col>
@@ -104,6 +103,6 @@ export default React.forwardRef((props: any,ref: any) => {
                 </Row>
             </div>
         </Tab.Container>
-    )
+    </div>
 })
 

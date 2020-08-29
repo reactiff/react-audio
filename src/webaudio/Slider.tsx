@@ -1,29 +1,21 @@
 import React, { ReactElement, RefObject } from 'react';
 import {useState, useEffect, useRef} from 'react'
-
 import SliderModule from './modules/SliderModule';
-
 import paramsFromProps from './paramsFromProps'
-  
 import './css/slider.css'
 
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+
 type SliderType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //title
     title?: any ,
     targetParam: string,
     value: number,
     min: number,
     max: number,
     step: number,
-
     vertical?: boolean
-    
 }
 
 const paramDefaults = {
@@ -32,56 +24,42 @@ const paramDefaults = {
 
 export default (props: SliderType) => {
 
-    
-    let control: ReactElement | null = null;
-    
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
+
     const inputRef = useRef(null);
-
-    const [currentValue, setCurrentValue] = useState(null)
-    const [proxy, setProxy] =  useState<SliderModule | null>(null);
-
-    useEffect(()=>{
-
-        // if(props.context){
+    const [currentValue, setCurrentValue] = useState()
     
-            
-            const params = paramsFromProps(props, {inputRef: inputRef, setCurrentValue: setCurrentValue}, paramDefaults);
-    
-            
-            const proxy = new SliderModule(
-                props.target,
-                props.context,
-                params
-            );
-    
-            proxy.target.registerSource(proxy);
+    const [proxy] = React.useState(new SliderModule(
+        target,
+        context,
+        paramsFromProps(
+            props, 
+            {
+                inputRef: inputRef, 
+                setCurrentValue,
+            }, 
+            paramDefaults
+        )
+    ));
 
-            setProxy(proxy);
-    
-        // }
-
-    },[])
-
-    if(!proxy){
-        return null;
-    }
+    target.registerSource(proxy);
 
     return (
-        <div className="slider param">
-            
-            <div className="oled">{currentValue || 0}</div>
-            
-            <input 
-                    ref={inputRef} 
-                    type="range" 
-                    defaultValue={proxy!.$params.value} 
-                    min={proxy!.$params.min} 
-                    max={proxy!.$params.max} 
-                    step={proxy!.$params.step}
-                    className={proxy!.$params.vertical && 'vertical'}
-                />
-        
-
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="slider param">
+                <div className="oled">{currentValue || 0}</div>
+                <input 
+                        ref={inputRef} 
+                        type="range" 
+                        defaultValue={props.value} 
+                        value={currentValue}
+                        min={props.min} 
+                        max={props.max} 
+                        step={props.step}
+                        className={props.vertical ? 'vertical' : ''}
+                    />
+            </div>    
+        </parentContext.Provider>
     );
 }

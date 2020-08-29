@@ -13,18 +13,24 @@ class TransportModule extends BaseAudioGraphNodeModule {
 
             init: () => {
                 
-                let playing = false;
+                return new Promise(async (resolve)=>{
 
-                params.startButtonRef.current.addEventListener("click", function(e:any) {
-                    if (!playing) {
-                        playing = true;
-                    } 
-                });
+                    let playing = false;
 
-                params.stopButtonRef.current.addEventListener("click", function(e:any) {
-                    if (playing) {
-                        playing = false;
-                    } 
+                    params.startButtonRef.current.addEventListener("click", function(e:any) {
+                        if (!playing) {
+                            playing = true;
+                        } 
+                    });
+
+                    params.stopButtonRef.current.addEventListener("click", function(e:any) {
+                        if (playing) {
+                            playing = false;
+                        } 
+                    });
+
+                    resolve();
+                    
                 });
             },
 

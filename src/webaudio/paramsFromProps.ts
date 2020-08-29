@@ -1,6 +1,4 @@
-const standardKeys: any = {
-    context: true,
-    target: true,
+const excludedKeys: any = {
     children: true
 }
 
@@ -9,7 +7,7 @@ export default (props:any, additionalProps?:any, defaults?: any) => {
     const params:any = {};
 
     for(let key in props){
-        if(!standardKeys[key]){
+        if(!excludedKeys[key]){
             params[key] = props[key];
         }
     }
@@ -18,7 +16,6 @@ export default (props:any, additionalProps?:any, defaults?: any) => {
         Object.assign(params, additionalProps);
     }
 
-    //defaults
     if(defaults){
         for(let defaultKey in defaults){
             if(!params.hasOwnProperty(defaultKey)){

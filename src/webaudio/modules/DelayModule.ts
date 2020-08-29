@@ -8,10 +8,10 @@ class DelayModule extends BaseAudioGraphNodeModule {
         let proxy: any = null;
 
         super(target, audioContext, params, {
-            init: async () => {
+            init: (options?: any) => {
                 return new Promise(resolve => {
-                    proxy.audioEndpoints.default = proxy.context.createDelay();
-                    proxy.audioEndpoints.default.delayTime.value = params.delayTime || 0;
+                    proxy.ownEndpoints.default = proxy.context.createDelay();
+                    proxy.ownEndpoints.default.delayTime.value = params.delayTime || 0;
                     resolve();
                 });
             }

@@ -3,7 +3,7 @@ import React from 'react';
 import Mpg from '../mpg/Mpg';
 
 import Analyzer from '../webaudio/Analyzer';
-import AudioContext from '../webaudio/AudioContext';
+import AudioContext from '../webaudio/AudioGraph';
 import AudioSource from '../webaudio/AudioSource';
 import Constant from '../webaudio/Constant';
 import Delay from '../webaudio/Delay';
@@ -21,7 +21,6 @@ import StreamRecorder from '../webaudio/StreamRecorder'
 import Slider from '../webaudio/Slider';
 import Split from '../webaudio/Split';
 import Stereo from '../webaudio/Stereo';
-import {TransitionMethod} from '../webaudio/modules/ParamModule';
 
 export default (props: any) => (
 

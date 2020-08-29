@@ -1,5 +1,5 @@
 import React from 'react'
-import Mpg from './mpg/Mpg'
+import Mpg from '../mpg/Mpg'
 
 export default (props: any) => <>
 

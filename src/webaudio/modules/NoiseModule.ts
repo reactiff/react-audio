@@ -9,10 +9,10 @@ class NoiseModule extends BaseAudioGraphNodeModule {
         
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: () => {
                 return new Promise(resolve => {
 
-                    const endPoint = proxy.audioEndpoints.default = proxy.context.createBufferSource();
+                    const endPoint = proxy.ownEndpoints.default = proxy.context.createBufferSource();
 
                     const skip = Date.now() % 97;
 
@@ -53,19 +53,19 @@ class NoiseModule extends BaseAudioGraphNodeModule {
                 
             },
 
-            start: (time: number) => {
+            start: (time: number, options?: any) => {
               
-                proxy.audioEndpoints.default.start(time);
+                proxy.ownEndpoints.default.start(time);
                 
                 if(params.duration!==undefined){
-                    proxy.audioEndpoints.default.stop(time + params.duration);
+                    proxy.ownEndpoints.default.stop(time + params.duration);
                 }
                 
             },
 
-            stop: () => {
-                if(proxy.audioEndpoints.default){
-                    proxy.audioEndpoints.default.stop();
+            stop: (options?: any) => {
+                if(proxy.ownEndpoints.default){
+                    proxy.ownEndpoints.default.stop();
                 }
                 
             }

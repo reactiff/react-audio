@@ -14,73 +14,44 @@ const shapes = ['sine', 'sawtooth', 'square', 'triangle'];
 
 class OscillatorModule extends BaseAudioGraphNodeModule {
 
-    oscillators: { [index: string]: any[] };
-    adsr: { a: number, d: number, s: number, r: number };
+    oscillators: { [index: string]: any };
 
     constructor(target: any, audioContext: any, params: any) {
              
         let proxy: any = null;
 
+        const getFrequency = (options?: any) => {
+            return params.frequency || (options && options.frequency);
+        }
+
         super(target, audioContext, params, {
 
-            init:  async (options?: any) => {
+            init:  (options?: any) => {
 
                 return new Promise(resolve => {
 
-                    // TODO: we need to cleanup spent oscillators
+                    const frequencyKey = 'default';
 
-                    const frequency = options && options.frequency || params.frequency;
-                    const frequencyKey = !!frequency ? Math.round(frequency * 100) : 'default';
-
-                    // The endpoints are gain stages and are static
-                    // if (!proxy.audioEndpoints[frequencyKey]) {
-                    //     proxy.audioEndpoints[frequencyKey] = proxy.context.createGain();  
-                    // }   
-
-                    //proxy.attenuate([frequencyKey]);
-                    if (!this.oscillators[frequencyKey]) {
-                        this.oscillators[frequencyKey] = [];
-                    }
-                    const freqOscillators = this.oscillators[frequencyKey];
-
-                    const osc = {
-                        id: uuid(),
+                    const note = {
+                        id: proxy.id,
                         oscillator: proxy.context.createOscillator(),
-                        status: STATUS.CREATED,
                         gain: proxy.context.createGain(),
+                        adsr: options.adsr || proxy.adsr,
                     };
 
-                    freqOscillators.push(osc);
+                    note.oscillator.type = proxy.$params.type;
+                    proxy.oscillators[frequencyKey] = note;
                     
-                    if (params.sine) {
-                        osc.oscillator.type = 'sine';
-                    }
-                    else if (params.sawtooth) {
-                        osc.oscillator.type = 'sawtooth';
-                    }
-                    else if (params.square) {
-                        osc.oscillator.type = 'square';
-                    }
-                    else if (params.triangle) {
-                        osc.oscillator.type = 'triangle';
-                    }
-                    else if (params.type) {
-                        osc.oscillator.type = params.type;
-                    }
-                    else if (params.random) {
-                        const types = params.types || shapes;
-                        osc.oscillator.type = types[Math.round(Math.random() * (types.length - 1))];
-                    }
-                    else if(params.wave){
+                    if(params.wave){
                         var wave = proxy.context.createPeriodicWave(params.wave[0], params.wave[1], {disableNormalization: true});
-                        osc.oscillator.setPeriodicWave(wave);
+                        note.oscillator.setPeriodicWave(wave);
                     }
+
+                    note.oscillator.connect(note.gain);
+
+                    // The endpoints are gain stages and are static
+                    proxy.ownEndpoints[frequencyKey] = note.gain;  
                     
-                    const desc = !!frequency ? frequency + 'Hz' : 'default';
-                    Log.indentWrite('new ~' + frequencyKey + 'Hz --- to --> gain', this.oscillators);
-
-                    osc.oscillator.connect(osc.gain);
-
                     resolve();
                 });
                 
@@ -88,132 +59,105 @@ class OscillatorModule extends BaseAudioGraphNodeModule {
 
             start: (time: number, options?: any) => {
 
-                //parameteric frequency
-                const frequency = options && options.frequency || params.frequency
-                const frequencyKey = !!frequency ? Math.round(frequency * 100) : 'default';
+                //if (proxy.tag ==='LFO') debugger;
 
-                // if(proxy.polyphonic && proxy.oscillatorState[frequencyKey]){
-                //     return;
-                // }
-                
-                const velocity = options && options.velocity || params.velocity || 1;
+                //parameteric frequency
+                const frequency = getFrequency(options);
+                const frequencyKey = 'default';
+                const velocity = params.velocity || (options && options.velocity) || 1;
                 const attackGain = velocity;
 
-                //proxy.attenuate([frequencyKey])
-                //const osc = proxy.audioEndpoints.default;
-
-                let oscillators = proxy.oscillators[frequencyKey];
-                let osc: any = null;
-                let j = oscillators.length;
-                while (j--) {
-                    if (oscillators[j].status === STATUS.CREATED) {
-                        oscillators[j].status = STATUS.STARTED;
-                        osc = oscillators[j];
-                        break;
-                    } 
+                let note = proxy.oscillators[frequencyKey];
+                
+                if (!proxy.initializedParams['frequency']) {
+                    // only when f hasn't been set by a param
+                    const frequencyOrDefault = typeof frequency !== 'undefined' ? frequency : 440
+                    note.oscillator.frequency.value = frequencyOrDefault;
                 }
-
-                if (!!frequency) {
-                    osc.oscillator.frequency.setValueAtTime(frequency, time);
-                    // set adsr
-                    if (oscillators.length === 1) {
-                        osc.gain.gain.value = 0; //setValueAtTime(attackGain, time);
-                    }
-                    
+                
+                const adsr = note.adsr;
+                // attack
+                if (adsr.a > 0) {
+                    note.gain.gain.value = 0; //setValueAtTime(attackGain, time);
                     // attack
-                    if (this.adsr.a > 0) {
-                        osc.gain.gain.setTargetAtTime(attackGain, time, this.adsr.a);
-                    }
-                    else{
-                        osc.gain.gain.value = attackGain;
-                    }
+                    note.gain.gain.setTargetAtTime(attackGain, time, adsr.a);
+                    // decay to sustain
+                    note.gain.gain.setTargetAtTime(attackGain * adsr.s, time + adsr.a, adsr.d);
+            }
+                else{
+                    note.gain.gain.value = attackGain * adsr.s;
                 }
-                else 
-                {
-                    osc.oscillator.frequency.setValueAtTime(0, time);
-                }
-                
-                // decay to sustain
-                if (this.adsr.d) {
-                    osc.gain.gain.setTargetAtTime(attackGain * this.adsr.s, time + this.adsr.a, this.adsr.d);
-                }
+
+                                
+                note.oscillator.start(time + (proxy.delay || 0));
+
+                if (options.autoRelease && typeof options.duration !== 'undefined') {
+                    note.oscillator.stop(time + options.duration)
+                } 
                 else {
-                    osc.gain.gain.setValueAtTime(attackGain * this.adsr.s, time + this.adsr.a, this.adsr.d);
+                    return note;
                 }
                 
+                delete proxy.oscillators[frequencyKey];
 
-                osc.oscillator.onended = () => {
-                    osc.oscillator.disconnect();
-                    let oscillators = proxy.oscillators[frequencyKey];
-                    let j = oscillators.length;
-                    while (j--) {
-                        if (oscillators[j] && oscillators[j].status === STATUS.STOPPING) {
-                            delete oscillators[j];
-                            break;
-                        } 
-                    }
-                }
-
-                osc.oscillator.start(time);
-
-                if (typeof params.duration !== 'undefined') {
-                    osc.oscillator.stop(time + params.duration)
-                }
-                
             },
 
             stop: (options?: any) => {
-                const frequency = options && options.frequency || params.frequency
-                const frequencyKey = !!frequency ? Math.round(frequency * 100) : 'default';
-
-                let oscillators = proxy.oscillators[frequencyKey];
-                let j = oscillators.length;
-                while (j--) {
-                    if (oscillators[j] && oscillators[j].status === STATUS.STARTED) {
-                        oscillators[j].status = STATUS.STOPPING;
-                        const t = audioContext.currentTime;
-                        const r = this.adsr.r;
-                        oscillators[j].gain.gain.setTargetAtTime(0.8, t, r);
-                        oscillators[j].gain.gain.setTargetAtTime(0.5, t + r * 1, r);
-                        oscillators[j].gain.gain.setTargetAtTime(0.3, t + r * 2, r);
-                        oscillators[j].gain.gain.setTargetAtTime(0.1, t + r * 3, r);
-                        oscillators[j].gain.gain.setTargetAtTime(0.000001, t + r * 4, r);
-                        oscillators[j].oscillator.stop(t + r * 6);
-                    } 
-                }
-
+                const note = options.sustained[this.id];
+                const time = options.time;
+                note.gain.gain.setTargetAtTime(0.001, options.time, note.adsr.r);
+                note.oscillator.stop(time + note.adsr.r + 1);
             },
 
             getAudioParam: (parameter: string): any[] => {
                 const freqs = Object.keys(proxy.oscillators);
-                return freqs.reduce((acc, f) => { 
-                    const parameters = proxy.oscillators[f].filter((osc:any) => !!osc).map((osc:any) => osc.oscillator[parameter]);
-                    return acc.concat(parameters);
-                }, []);
-            },
-
-            getEndPoints() {
-                const freqs = Object.keys(proxy.oscillators);
-                return freqs.reduce((acc, f) => { 
-                    const gains = proxy.oscillators[f].filter((osc:any) => !!osc).map((osc:any) => osc.gain);
-                    return acc.concat(gains);
-                }, []);
+                const params = freqs.map(f => proxy.oscillators[f].oscillator[parameter]);
+                return params;
             },
 
         });
         
+        this.$params.type = resolveOscillatorTypeSwitch(params);
         this.$type = 'Oscillator';
-        this.staticEndpoints = true;      
         this.oscillators = {};
-        this.adsr = { a: 0, d: 0, s: 1, r: 0.2 };
 
         proxy = this;
 
     }
 
     getDescription() {
-        return this.$params.purpose + '('+ this.$params.type +')';
+        return this.getShortDescription();
+    }
+
+    getShortDescription() {
+        const name = this.$params.tag || this.$params.type;
+        const tokens = [];
+        if (this.$params.frequency) tokens.push(this.$params.frequency);
+        return name + `(${tokens.join(',')})`;
     }
 }
+
+const resolveOscillatorTypeSwitch = (params: any) => {
+    if (params.sawtooth) {
+        return 'sawtooth';
+    }
+    else if (params.square) {
+        return 'square';
+    }
+    else if (params.triangle) {
+        return 'triangle';
+    }
+    else if (params.type) {
+        return params.type;
+    }
+    else if (params.random) {
+        const types = params.types || shapes;
+        return types[Math.round(Math.random() * (types.length - 1))];
+    }
+    else {
+        return 'sine';
+    }
+};
+
 
 export default OscillatorModule;

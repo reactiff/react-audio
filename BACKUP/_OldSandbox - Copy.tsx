@@ -180,7 +180,7 @@ export default () => {
                 <Oscillator type="sine" frequency={41.20} duration={60}></Oscillator>
                 
                 <Param name="gain">
-                  <Constant value={0.3}></Constant>
+                  <Offset value={0.3}></Offset>
                   <Oscillator type="sine" frequency={1.8} duration={60}></Oscillator>
                 </Param>
 
@@ -383,7 +383,7 @@ export default () => {
                 <Oscillator type="sine" frequency={41.20} duration={60}></Oscillator>
                 
                 <Param for="gain">
-                  <Constant value={0.3}></Constant>
+                  <Offset value={0.3}></Offset>
                   <Oscillator type="sine" frequency={1.8} duration={60}></Oscillator>
                 </Param>
 

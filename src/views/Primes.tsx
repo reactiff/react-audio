@@ -1,29 +1,29 @@
 import React from 'react';
 
-import AudioContext from './webaudio/AudioContext';
-import Analyzer from './webaudio/Analyzer';
-import AudioSource from './webaudio/AudioSource';
-import Constant from './webaudio/Constant';
-import Delay from './webaudio/Delay';
-import Feedback from './webaudio/Feedback';
-import Filter from './webaudio/Filter';
-import { FilterType } from './webaudio/modules/FilterModule';
-import Gain from './webaudio/Gain';
-import Instrument from './webaudio/Instrument';
-import Noise from './webaudio/Noise';
-import Oscillator from './webaudio/Oscillator';
-import Param from './webaudio/Param';
-import Slider from './webaudio/Slider';
-import {TransitionMethod} from './webaudio/modules/ParamModule';
-import Position from './webaudio/Position';
-import StreamPlayer from './webaudio/StreamPlayer'
-import StreamRecorder from './webaudio/StreamRecorder'
-import Split from './webaudio/Split';
-import Stereo from './webaudio/Stereo';
-import Transport from './webaudio/Transport';
-import note from './webaudio/modules/Notes';
+import AudioContext from '../webaudio/AudioGraph';
+import Analyzer from '../webaudio/Analyzer';
+import AudioSource from '../webaudio/AudioSource';
+import Constant from '../webaudio/Constant';
+import Delay from '../webaudio/Delay';
+import Feedback from '../webaudio/Feedback';
+import Filter from '../webaudio/Filter';
+import { FilterType } from '../webaudio/modules/FilterModule';
+import Gain from '../webaudio/Gain';
+import Instrument from '../webaudio/Instrument';
+import Noise from '../webaudio/Noise';
+import Oscillator from '../webaudio/Oscillator';
+import Param from '../webaudio/Param';
+import Slider from '../webaudio/Slider';
+import TransitionMethod from '../webaudio/modules/TransitionMethod';
+import Position from '../webaudio/Position';
+import StreamPlayer from '../webaudio/StreamPlayer'
+import StreamRecorder from '../webaudio/StreamRecorder'
+import Split from '../webaudio/Split';
+import Stereo from '../webaudio/Stereo';
+import Transport from '../webaudio/Transport';
+import note from '../webaudio/modules/Notes';
 
-import './App/app.css';
+import '../App/app.css';
 
 export default () => {
   return (
@@ -75,24 +75,24 @@ export default () => {
                   </Param>
                 </Stereo>
 
-                <Param name="gain" value={0.5} targetValue={0.001} duration={120} method={TransitionMethod.Exponential} ></Param>
+                <Param name="gain" value={0.5} targetValue={0.001} duration={120} method="exp" ></Param>
 
               </Gain>      
               
 
               <Gain>
                   <Oscillator type="sine" frequency={[53, 53.14, 131, 131.14, 131.10]} />
-                  <Param name="gain" value={0.5} targetValue={0.001} duration={110} method={TransitionMethod.Exponential} ></Param>
+                  <Param name="gain" value={0.5} targetValue={0.001} duration={110} method="exp" ></Param>
               </Gain>      
 
               <Gain>
                 <Oscillator type="sine" frequency={[59, 111, 203, 567]} />
-                <Param name="gain" value={1} targetValue={0.001} duration={10} method={TransitionMethod.Exponential} ></Param>
+                <Param name="gain" value={1} targetValue={0.001} duration={10} method="exp" ></Param>
               </Gain>
 
               <Gain>
                 <Oscillator type="sine" frequency={[247, 435, 623, 809, 809.05]} />
-                <Param name="gain" value={0.5} targetValue={0.001} duration={45} method={TransitionMethod.Exponential} ></Param>
+                <Param name="gain" value={0.5} targetValue={0.001} duration={45} method="exp" ></Param>
               </Gain>
             </Instrument>   
 

@@ -1,61 +1,46 @@
+import _ from 'lodash';
 import React from 'react';
+import Mpg from '../mpg/Mpg';
 
-import ParamModule, {TransitionMethod} from './modules/ParamModule';
-import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+import Node from './NodeRenderer';
 
-import './css/gain.css'
+import ParamModule from './modules/ParamModule';
+
 
 type ParamPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
+    purpose?: string,
     name: string,
-    
     min?: number,
     max?: number,
-
     value?: number,
     targetValue?: number,
     curve?: any[], 
-    
     delay?: number,
-    method?: TransitionMethod
+    method?: string
     duration?: number,
-}
-
-const defaultValues = {
-    method: TransitionMethod.Exponential,
 }
 
 export default (props: ParamPropsType) => {
 
-    let children = null;
-
-    if(props.context){
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
         
-        const proxy = new ParamModule(
-            props.target,
-            props.context,
-            paramsFromProps(props, {}, defaultValues)
-        );
+    const [proxy] = React.useState(new ParamModule(
+        target,
+        context,
+        paramsFromProps(props, {})
+    ));
 
-        proxy.target.registerSource(proxy);
-
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
-    return (
-        <div className="param">
-            {children}
-        </div>
-    );
+    const node = {
+        proxy,
+        title: proxy.getShortDescription(),
+    };
+
+    return <Node {...node}>{props.children}</Node>
 }

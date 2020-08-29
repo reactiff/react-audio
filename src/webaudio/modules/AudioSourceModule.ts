@@ -54,26 +54,23 @@ class AudioSourceModule extends BaseAudioGraphNodeModule {
                 request.send();
             },
 
-            init: async () => {
+            init: (options?: any | null) => {
                 return new Promise(resolve => {
-                  
-                  proxy.audioEndpoints['default'] = proxy.context.createBufferSource();
-                  
+                  proxy.ownEndpoints['default'] = proxy.context.createBufferSource();
                   proxy.operations.setBuffer((buffer:any)=>{
-                    proxy.audioEndpoints.default.buffer = buffer;
+                    proxy.ownEndpoints.default.buffer = buffer;
                     resolve();
                   })
-
                 });
-              },
+            },
 
             start: async (time: number) => {
-                proxy.audioEndpoints.default.start(time) 
+                proxy.ownEndpoints.default.start(time) 
             },
 
             stop: () => {
                 if(proxy.audioEndpoint){
-                    proxy.audioEndpoints.default.stop();
+                    proxy.ownEndpoints.default.stop();
                 }
             }
 

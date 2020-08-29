@@ -1,40 +1,44 @@
+const LOGGING_ENABLED = false;
+
 export default {
-
+    
     connection(source: any, endPointIndex:number, destination: string) {
-        
-        console.log(' ( ' + source.getDescription() + ':' + endPointIndex + ' ) --- to --> ( ' + destination + ' )');
-
+        if (LOGGING_ENABLED) console.log(' ( ' + source.getDescription() + ':' + endPointIndex + ' ) --- to --> ( ' + destination + ' )');
     },
 
     initialization(entity: any, options: any) {
-        console.log(' init ' + entity.getDescription(), options);
+        if (LOGGING_ENABLED) console.log(' init ' + entity.getDescription(), options);
     },
 
     passThrough(entity: any, source: any) {
-        console.log(' pass -- ' + source.getDescription() + ' -thru- ' + entity.getDescription() + ' -->');
+        if (LOGGING_ENABLED) console.log(' pass -- ' + source.getDescription() + ' -thru- ' + entity.getDescription() + ' -->');
     },
 
     receive(entity: any, source: any) {
-        console.log(' (' + source.getDescription() + ') received by (' + entity.getDescription() + ')');
+        if (LOGGING_ENABLED) console.log(' connected (' + source.getDescription() + ') -- to --> (' + entity.getDescription() + ')');
     },
 
     start(entity: any, time: number, options: any) {
-        console.log(' start (' + entity.getDescription() + ') @ ' + time, options);
+        if (LOGGING_ENABLED) console.log(' start (' + entity.getDescription() + ') @ ' + time, options);
     },
 
     stop(entity: any, options: any) {
-        console.log(' stop (' + entity.getDescription() + ')', options);
+        if (LOGGING_ENABLED) console.log(' stop (' + entity.getDescription() + ')', options);
     },
 
     registerSource(entity: any, source: any) {
-        console.log(' ' + entity.getDescription() + ' < ~ ' + source.getDescription(), entity.sources);
+        if (LOGGING_ENABLED) console.log(' ' + entity.getDescription() + ' < ~ ' + source.getDescription(), entity.sources);
     },
 
     indentWrite(text: string, data: any) {
-        console.log(' - ' + text, data);
+        if (LOGGING_ENABLED) console.log(' - ' + text, data);
     },
 
-    write([...args]) {
-        console.log(...args);
+    write(text: string) {
+        if (LOGGING_ENABLED) console.log(text);
+    },
+
+    clear() {
+        if (LOGGING_ENABLED) console.clear();
     }
 }

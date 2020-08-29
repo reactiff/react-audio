@@ -8,15 +8,15 @@ class PositionModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: () => {
                 return new Promise(resolve => {
                 
-                    proxy.audioEndpoints.default = proxy.context.createPanner();
+                    proxy.ownEndpoints.default = proxy.context.createPanner();
 
                     //set params
                     for(let key in params){
                         if(params.hasOwnProperty(key)){
-                            proxy.audioEndpoints.default[key] = params[key];
+                            proxy.ownEndpoints.default[key] = params[key];
                         }
                     }
 

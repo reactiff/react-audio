@@ -1,52 +1,41 @@
 import React from 'react';
-
 import FilterModule, {FilterType} from './modules/FilterModule';
-import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
-import './css/gain.css'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
 type FilterPropsType = {
-
     //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
     //component specific
     frequency?: number,
     detune?: number,
     Q?: number,
     gain?: number,
-
     type?: FilterType
     off?: boolean
 }
 
 export default (props: FilterPropsType) => {
 
-    let children = null;
-
-    if(props.context){
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
         
-        const proxy = new FilterModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
+    const [proxy] = React.useState(new FilterModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        proxy.target.registerSource(proxy);
 
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
     return (
-        <div className="filter">
-            {children}
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="filter">
+                {props.children}
+            </div>    
+        </parentContext.Provider>
     );
 }

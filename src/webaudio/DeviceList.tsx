@@ -10,26 +10,22 @@ export default (props: any) => {
     const [deviceId, setDeviceId] = useState<any>();
     
     useEffect(() => {
-        if(props.context){
-            if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
-                throw new Error('This browser is not supported. MsgId: 65536');
-            }
-            navigator.mediaDevices.enumerateDevices().then(setDevices);
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            throw new Error('This browser is not supported. MsgId: 65536');
         }
-        
-    }, [props.context]);
+        navigator.mediaDevices.enumerateDevices().then(setDevices);
+    }, []);
     
     return (
         <div className="device-list">
 
             {
                 deviceId &&
-                <Instrument context={props.context} target={props.target}>
+                <Instrument>
                     <Analyzer type="wave" margin={20} />
                     <Analyzer type="bar" margin={20} />
                     <StreamPlayer deviceId={deviceId} />
                 </Instrument>
-                
             }
 
             {

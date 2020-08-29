@@ -31,35 +31,37 @@ class FeedbackModule extends BaseAudioGraphNodeModule {
 
             connect: () => {
 
-                //feed forward as usual
-                proxy.target.receive(proxy);
+                return new Promise(async (resolve)=>{
+                    //feed forward as usual
+                    proxy.target.receive(proxy);
 
-                //and also, feed back into the sources of all return nodes
-                for(let rn of proxy.returnNodes){
-                    
-                    rn.passThrough(proxy);
+                    //and also, feed back into the sources of all return nodes
+                    for(let rn of proxy.returnNodes){
+                        
+                        rn.passThrough(proxy);
 
-                    // for(let src of rn.sources){
-                    //     src.receive(proxy);
+                        // for(let src of rn.sources){
+                        //     src.receive(proxy);
+                        // }
+                    }
+
+                    // const inputs = proxy.getEndPoints();
+
+                    // const entryNodes = proxy.target.returnNode.getEntryNodes();
+
+                    // if(entryNodes.length){
+                    //     for(let entry of entryNodes){
+                    //         for(let input of inputs){
+                    //             entry.receive(input);
+                    //         }
+                    //     }
                     // }
-                }
+                    // else{
+                    //     proxy.target.receive(proxy);
+                    // }
 
-                // const inputs = proxy.getEndPoints();
-
-                // const entryNodes = proxy.target.returnNode.getEntryNodes();
-
-                // if(entryNodes.length){
-                //     for(let entry of entryNodes){
-                //         for(let input of inputs){
-                //             entry.receive(input);
-                //         }
-                //     }
-                // }
-                // else{
-                //     proxy.target.receive(proxy);
-                // }
-
-                
+                    resolve();
+                });
                 
             }
         });
@@ -72,7 +74,7 @@ class FeedbackModule extends BaseAudioGraphNodeModule {
     }
 
     registerReturnNode(returnNode: FeedbackReturnModule) {
-        const parent = this.findParent('Feedback', returnNode.$params.for);
+        const parent = this.findParentByTypeAndName('Feedback', returnNode.$params.for);
 
         if(!parent){
             throw new Error('Feedback origin not found');

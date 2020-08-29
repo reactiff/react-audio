@@ -1,16 +1,20 @@
-.analyzer-container {
-    
-    background-color: rgba(0,0,0,0.5);
-
-    width: 800px;
-    height: 300px;
-
+.analyzer {
+    /* background-color: rgba(0,0,0,0.5); */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-sizing: border-box;
 }
 
+.column > .analyzer,
+.rack > .analyzer {
+    position: relative;
+    height: 40px;
+}
 
 .analyzer-canvas {
-    
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.5);
-
+    background-color: rgba(20,20,20,0.8);
+    box-sizing: border-box;
 }

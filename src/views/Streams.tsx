@@ -2,41 +2,37 @@ import React from 'react';
 import {useRef, useState, useEffect} from 'react'
 import uuid from 'uuid/v4'
 
-import AudioContext from './webaudio/AudioContext';
-import Analyzer from './webaudio/Analyzer';
-import AudioSource from './webaudio/AudioSource';
-import Constant from './webaudio/Constant';
-import Delay from './webaudio/Delay';
-import DynamicCompressor from './webaudio/DynamicCompressor';
-import Feedback from './webaudio/Feedback';
-import Filter from './webaudio/Filter';
-import { FilterType } from './webaudio/modules/FilterModule';
-import Gain from './webaudio/Gain';
-import Instrument from './webaudio/Instrument';
-import Noise from './webaudio/Noise';
-import Oscillator from './webaudio/Oscillator';
-import Param from './webaudio/Param';
-import Slider from './webaudio/Slider';
-import {TransitionMethod} from './webaudio/modules/ParamModule';
-import Position from './webaudio/Position';
-import DeviceList from './webaudio/DeviceList'
-import StreamPlayer from './webaudio/StreamPlayer'
-import StreamRecorder from './webaudio/StreamRecorder'
-import Split from './webaudio/Split';
-import Stereo from './webaudio/Stereo';
-import Transport from './webaudio/Transport';
-import note from './webaudio/modules/Notes';
+import AudioGraph from '../webaudio/AudioGraph';
+import Analyzer from '../webaudio/Analyzer';
+import AudioSource from '../webaudio/AudioSource';
+import Constant from '../webaudio/Constant';
+import Delay from '../webaudio/Delay';
+import DynamicCompressor from '../webaudio/DynamicCompressor';
+import Feedback from '../webaudio/Feedback';
+import Filter from '../webaudio/Filter';
+import { FilterType } from '../webaudio/modules/FilterModule';
+import Gain from '../webaudio/Gain';
+import Instrument from '../webaudio/Instrument';
+import Noise from '../webaudio/Noise';
+import Oscillator from '../webaudio/Oscillator';
+import Param from '../webaudio/Param';
+import Slider from '../webaudio/Slider';
+import Position from '../webaudio/Position';
+import DeviceList from '../webaudio/DeviceList'
+import StreamPlayer from '../webaudio/StreamPlayer'
+import StreamRecorder from '../webaudio/StreamRecorder'
+import Split from '../webaudio/Split';
+import Stereo from '../webaudio/Stereo';
+import Transport from '../webaudio/Transport';
+import note from '../webaudio/modules/Notes';
 
-import ui from './mpg/Mpg'
+import ui from '../mpg/Mpg'
 
-import ActionBar from './Synth/ActionBar'
-import * as Actions from './Synth/actions'
-import generateOscillators from './Synth/generateOscillators'
-import renderChildren from './webaudio/renderChildren'
+import ActionBar from '../Synth/ActionBar'
+import * as Actions from '../Synth/actions'
+import generateOscillators from '../Synth/generateOscillators'
 
-import TestVirtualCable from './TestVirtualCable';
-
-import './css/synth.css'
+import '../css/synth.css'
 
 export default () => {
 
@@ -46,7 +42,7 @@ export default () => {
     <div className="App flex-tight">
       <header className="App-header">
 
-        <AudioContext onLoad={setContext}>
+        <AudioGraph>
 
           
           <DeviceList />  
@@ -69,9 +65,9 @@ export default () => {
 
             {/* <Gain name="Inst">
               <Param name="gain">
-                <Constant value={1} />
+                <Constant offset={1} />
               </Param>
-              <Constant value={1} />
+              <Constant offset={1} />
               <Oscillator purpose="LFO" type="sine" frequency={2} duration={1}></Oscillator>
             </Gain> */}
 
@@ -137,7 +133,7 @@ export default () => {
             
           </Transport> */}
 
-        </AudioContext>
+        </AudioGraph>
 
       </header>
     </div>

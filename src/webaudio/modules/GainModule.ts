@@ -1,4 +1,5 @@
 import BaseAudioGraphNodeModule from './BaseAudioGraphNodeModule';
+import { applyTransition } from './TransitionMethod';
 
 class GainModule extends BaseAudioGraphNodeModule {
 
@@ -10,64 +11,45 @@ class GainModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: async () => {
-                return new Promise(resolve => {
-                    proxy.audioEndpoints.default = proxy.context.createGain();
-                    //proxy.audioEndpoints.default.gain.value = params.value || params.startValue || 1;
+            init: (options?: any) => {
+                return new Promise((resolve) => {
+                    proxy.ownEndpoints.default = proxy.context.createGain();
+                    //const value = typeof params.value !== 'undefined' ? params.value : 1;
+                    const value = this.evalParam(params.value, options, 1);
+                    proxy.ownEndpoints.default.gain.value = value ;    
                     resolve();
                 });
             },
  
-            start: (time: number) => {
-              
-                // WE REALLY NEED THIS TO AUTOMATE PARAMETERS ON GAIN
-
-                if(!proxy.sources.length){
-                    return;
-                }
-
-                const value = { 
-                    initial: undefined,
-                    target: undefined,
-                };
-                
-                if (typeof params.value !== 'undefined') {
-                    value.initial = params.value;
-                } 
-                else if (typeof params.startValue !== 'undefined') {
-                    value.initial = params.startValue;
-                } 
-                if (typeof value.initial !== 'undefined') {
-                    proxy.audioEndpoints.default.gain.setValueAtTime(value.initial, time);
-                }
-                
+            start: (time: number, options?: any) => {
                 if (typeof params.targetValue !== 'undefined') {
-                    value.target = params.targetValue;
+                    applyTransition({
+                        audioParam: proxy.ownEndpoints.default.gain, 
+                        time,
+                        method: params.method, 
+                        targetValue: this.evalParam(params.targetValue, options, 1),
+                        delay: this.evalParam(params.delay, options, 1),
+                        duration: this.evalParam(params.duration, options, 1),
+                    });
                 }
-                else if (typeof params.endValue !== 'undefined') {
-                    value.target = params.endValue;
-                }
-
-                if (typeof value.target !== 'undefined') {
-
-                    const attenuatedEnd = value.target;
-                    const delay = proxy.$params.delay || 0;
-                    const duration = proxy.$params.duration || 0;
-
-                    proxy.audioEndpoints.default.gain.exponentialRampToValueAtTime(attenuatedEnd, 
-                        time + delay + duration);
-
-                }
-                
             }
 
         });
 
+        
         this.$type = 'Gain';
         this.isInput = true;
         
         proxy = this;
 
+    }
+
+    getShortDescription() {
+        const name = this.$params.tag || this.$type;
+        const tokens = [];
+        if (this.$params.value) tokens.push(this.$params.value);
+        if (this.$params.targetValue) tokens.push('to:' + this.$params.targetValue);
+        return name + `(${tokens.join(',')})`;
     }
 }
 

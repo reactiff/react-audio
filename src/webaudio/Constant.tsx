@@ -1,47 +1,36 @@
+import _ from 'lodash';
 import React from 'react';
+import Mpg from '../mpg/Mpg';
+
+import paramsFromProps from './paramsFromProps'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+import Node from './NodeRenderer';
 
 import ConstantModule from './modules/ConstantModule';
-import renderChildren from './renderChildren'
-import paramsFromProps from './paramsFromProps'
-
-import './css/gain.css'
 
 type ConstantPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
     value: number
-
 }
 
 export default (props: ConstantPropsType) => {
 
-    let children = null;
-
-    if(props.context){
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
         
-        const proxy = new ConstantModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
+    const [proxy] = React.useState(new ConstantModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        props.target.registerSource(proxy);
-        
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
-    return (
-        <div className="gain">
-            {children}
-        </div>
-    );
+    const node = {
+        proxy,
+        title: proxy.getShortDescription(),
+    };
+
+    return <Node {...node}>{props.children}</Node>
 }

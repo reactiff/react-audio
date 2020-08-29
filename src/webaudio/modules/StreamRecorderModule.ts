@@ -12,40 +12,44 @@ class StreamRecorderModule extends BaseAudioGraphNodeModule {
 
             init: () => {
                 
-                proxy.audioEndpoints.default = proxy.context.createMediaStreamDestination();
+                return new Promise(async (resolve)=>{
 
-                let mediaRecorder:any = null;
-                let recording = false;
-                var chunks:any[] = [];
+                    proxy.ownEndpoints.default = proxy.context.createMediaStreamDestination();
 
-                params.buttonRef.current.addEventListener("click", function(e:any) {
-                    
-                    if (!recording) {
+                    let mediaRecorder:any = null;
+                    let recording = false;
+                    var chunks:any[] = [];
+
+                    params.buttonRef.current.addEventListener("click", function(e:any) {
                         
-                        //new instance of mediaRecorder
-                        mediaRecorder = new MediaRecorder(proxy.audioEndpoints.default.stream);
+                        if (!recording) {
+                            
+                            //new instance of mediaRecorder
+                            mediaRecorder = new MediaRecorder(proxy.ownEndpoints.default.stream);
+                            
+                            mediaRecorder.ondataavailable = function(e:any) {
+                                chunks.push(e.data);
+                            };
                         
-                        mediaRecorder.ondataavailable = function(e:any) {
-                            chunks.push(e.data);
-                        };
-                    
-                        mediaRecorder.onstop = function(e:any) {
-                            var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-                            params.audioRef.current.src = URL.createObjectURL(blob);
-                        };
+                            mediaRecorder.onstop = function(e:any) {
+                                var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+                                params.audioRef.current.src = URL.createObjectURL(blob);
+                            };
 
-                        e.target.value = "Stop";
-                        
-                        mediaRecorder.start();
+                            e.target.value = "Stop";
+                            
+                            mediaRecorder.start();
 
-                        recording = true;
-                      } else {
-                        mediaRecorder.stop();
-                        e.target.value = "Record";
-                        recording = false;
-                      }
-                });
+                            recording = true;
+                        } else {
+                            mediaRecorder.stop();
+                            e.target.value = "Record";
+                            recording = false;
+                        }
+                    });
              
+                    resolve();
+                });
                 
 
             }

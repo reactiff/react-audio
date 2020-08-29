@@ -8,18 +8,16 @@ class StreamPlayerModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: () => {
                 return new Promise(async resolve => {
                                     
-                    let supported = navigator.mediaDevices.getSupportedConstraints();
-
                     const constraint = { audio: { deviceId: params.deviceId, echoCancellation: false } };
                     const stream = await navigator.mediaDevices.getUserMedia(constraint)
                     .catch(err => {
                         throw new Error('The following getUserMedia error occured: ' + err);
                     });;
 
-                    proxy.audioEndpoints.default = proxy.context.createMediaStreamSource(stream);
+                    proxy.ownEndpoints.default = proxy.context.createMediaStreamSource(stream);
 
                     resolve();
                     
@@ -28,7 +26,7 @@ class StreamPlayerModule extends BaseAudioGraphNodeModule {
             }
         });
 
-        this.staticEndpoints = true;
+        // this.staticEndpoints = true;
         this.$type = 'StreamPlayer';
         proxy = this;
     }

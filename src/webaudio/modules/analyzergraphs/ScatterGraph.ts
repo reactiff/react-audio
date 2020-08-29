@@ -28,26 +28,21 @@ export default {
 
         const xwave = new Float32Array(proxy.analyzers.x.frequencyBinCount);
         const ywave = new Float32Array(proxy.analyzers.y.frequencyBinCount);
-
-        // animation methods
-        const updateX = () => {
-            requestAnimationFrame(updateX);
-            proxy.analyzers.x.getFloatTimeDomainData(xwave);
-        }
-        const updateY = () => {
-            requestAnimationFrame(updateY);
-            proxy.analyzers.y.getFloatTimeDomainData(ywave);
-        }
-
+        
         ctx.font = "18px Arial";
         let axis = {
             x: { min: Infinity, max: -Infinity },
             y: { min: Infinity, max: -Infinity }
         }
 
+
+        const endpointX = proxy.analyzers.x;
+        const endpointY = proxy.analyzers.y;
+
         const drawWaveform = () => {
 
-            requestAnimationFrame(drawWaveform);
+            endpointX.getFloatTimeDomainData(xwave);
+            endpointY.getFloatTimeDomainData(ywave);
             
             ctx.fillStyle = clearStyle;
             ctx.fillRect(clearRect.x, clearRect.y, clearRect.w, clearRect.h);
@@ -110,10 +105,9 @@ export default {
                 axis.y.max = ywave[0];
             }
 
-        }
+            requestAnimationFrame(drawWaveform);
 
-        updateX();
-        updateY();
+        }
 
         drawWaveform();
     }
