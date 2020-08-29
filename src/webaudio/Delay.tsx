@@ -1,46 +1,33 @@
 import React from 'react';
-
 import DelayModule from './modules/DelayModule';
-import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
-//import './css/delay.css'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
 type DelayPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
     delayTime?: number,
 }
 
 export default (props: DelayPropsType) => {
 
-    let children = null;
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
 
-    if(props.context){
-        
-        const proxy = new DelayModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
+    const [proxy] = React.useState(new DelayModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        proxy.target.registerSource(proxy);
+    target.registerSource(proxy);
 
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
-    
     return (
-        <div className="delay">
-            {children}
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="delay">
+                {props.children}
+            </div>    
+        </parentContext.Provider>
     );
 }

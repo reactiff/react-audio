@@ -1,58 +1,56 @@
+import _ from 'lodash';
 import React from 'react';
-
-import AudioGraphGainModule from './modules/GainModule';
-import renderChildren from './renderChildren'
-import paramsFromProps from './paramsFromProps'
-
-import './css/gain.css'
 import Mpg from '../mpg/Mpg';
 
+import paramsFromProps from './paramsFromProps'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+import Node from './NodeRenderer';
+
+import GainModule from './modules/GainModule';
+import './css/gain.css'
+
 type GainPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
     name?: string,
     value?: number,
     targetValue?: number,
     duration?: number,
-
-    delay?: number
+    delay?: number,
+    method?: string,
 }
 
 export default (props: GainPropsType) => {
 
-    let children = null;
-
-    if(props.context){
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
         
-        const proxy = new AudioGraphGainModule(
-            props.target,
-            props.context,
-            paramsFromProps(props),
-        );
+    const [proxy] = React.useState(new GainModule(
+        target,
+        context,
+        paramsFromProps(props),
+    ));
 
-        props.target.registerSource(proxy);
-        
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
+    const node = {
+        proxy,
+        title: proxy.getShortDescription(),
+        icon: <GainIcon proxy={proxy} />,
+    };
+
+    return <Node {...node}>{props.children}</Node>
+}
+
+
+const GainIcon = (props: any) => {
     return (
-        <Mpg.Flex className="gain" row padded>
-            <Mpg.Flex column tight>
-                <small>GAIN</small>
-                <Mpg.Flex row tight justifyContent="center">
-                    <Mpg.div>{props.value}</Mpg.div>
-                </Mpg.Flex>
-            </Mpg.Flex>
-            {children}
-        </Mpg.Flex>
+        <Mpg.div bgColor="black">
+            {
+                <svg height="40" width="40" style={{transform: 'scale(0.5)'}}>
+                    <polyline points="0,40 40,0 40,40" style={{ fill: 'white', stroke: 'white', strokeWidth: 1 }} />
+                </svg>    
+            }
+        </Mpg.div>
     );
 }

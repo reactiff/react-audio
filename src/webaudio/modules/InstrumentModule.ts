@@ -1,4 +1,5 @@
 import BaseAudioGraphNodeModule from './BaseAudioGraphNodeModule';
+import mergeProps from './mergeProps';
 
 class InstrumentModule extends BaseAudioGraphNodeModule {
 
@@ -11,50 +12,41 @@ class InstrumentModule extends BaseAudioGraphNodeModule {
             //Instrument
             trigger: async (options?: any | null) => {
 
-                const opt = options || {}
+                const adsr = mergeProps({...proxy.adsr}, proxy.$params.adsr);
+                const moduleOptions = mergeProps({adsr}, proxy.$params);
+                const triggerOptions = mergeProps(moduleOptions, options);
 
                 //init all
-                await this.init(opt);
-                await this.connect();
-        
-                let autoReleaseDelayMs;
-                
-                if(params.autoRelease){
-                    if(typeof params.duration === 'undefined'){
-                        throw new Error(params.name + ' missing duration prop, required for autoRelease')
-                    }
-                    autoReleaseDelayMs = params.duration * 1000
-                } 
+                await proxy.init(triggerOptions);
 
-                return this.start(this.context.currentTime, opt, autoReleaseDelayMs);
-        
-            }, 
+                await proxy.connect();
 
-            //Instrument
-            stop: async (options?: any | null) => {
-                // stop sources
-                for(let src of this.sources){
-                    src.stop(options);
+                if (proxy.context.state !== 'running') {
+
+                    proxy.context.resume();    
                 }
+
+                return proxy.start(proxy.context.currentTime, triggerOptions);
+        
             }, 
 
+            release: async (options?: any | null) => {
+
+                const adsr = mergeProps({...proxy.adsr}, proxy.$params.adsr);
+                const moduleOptions = mergeProps({adsr}, proxy.$params);
+                const releaseOptions = mergeProps(moduleOptions, options);
+
+                releaseOptions.time = proxy.context.currentTime;
+                
+                return proxy.stop(releaseOptions);
+        
+            }, 
+            
             getEndPoints() {
-                return proxy.inputSources.reduce((acc: any[], s: any) => { 
-                    const sourceEndpoints = s.getEndPoints();
-                    return acc.concat(sourceEndpoints);
-                }, []);
+                return Object.values(proxy.receivedEndpoints);
             },
 
         });
-
-        // if(params.signalSource) {
-        //     if(params.signalSource.function.toLowerCase() === 'primes'){
-        //         const {range} = params.signalSource.options;
-        //         this.signalSource = new Primes(range[0], range[1]);
-        //     }
-        // }
-
-        // this.staticEndpoints = true;
 
         this.$type = 'Instrument';
 

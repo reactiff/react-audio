@@ -8,21 +8,19 @@ class ConstantModule extends BaseAudioGraphNodeModule {
 
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: (options?: any) => {
 
                 return new Promise(resolve => {
-                    proxy.audioEndpoints.default = new ConstantSourceNode(proxy.context, {
-                        offset: params.value
-                    }); 
+                    proxy.ownEndpoints.default = proxy.context.createConstantSource();
+                    const value = typeof params.offset !== 'undefined' ? params.offset : 1;
+                    proxy.ownEndpoints.default.offset.value = value;    
                     resolve();
                 });
                 
             },
 
-            start: (time: number) => {
-              
-                proxy.audioEndpoints.default.start(time, 0, params.duration);
-                
+            start: (time: number, options?: any) => {
+                proxy.ownEndpoints.default.start(time);
             }
            
         });
@@ -34,8 +32,19 @@ class ConstantModule extends BaseAudioGraphNodeModule {
     }
 
     getDescription() {
-        return ' CONST ('+ this.$params.value +')';
+        return 'DC: ' + getSign(this.$params.value) + this.$params.offset.toFixed(1);
     }
+
+    getShortDescription() {
+        return this.getDescription();
+    }
+
+}
+
+function getSign(value: number) {
+    if (value>0) return '+';
+    if (value<0) return '-';
+    return '';
 }
 
 export default ConstantModule;

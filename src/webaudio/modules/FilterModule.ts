@@ -29,7 +29,7 @@ class FilterModule extends BaseAudioGraphNodeModule {
         let proxy: any = null;
 
         super(target, audioContext, params, {
-            init: async () => {
+            init: (options?: any) => {
 
                 return new Promise(resolve => {
 
@@ -38,7 +38,7 @@ class FilterModule extends BaseAudioGraphNodeModule {
                         return;
                     }
                     
-                    const endPoint = proxy.audioEndpoints.default = proxy.context.createBiquadFilter();
+                    const endPoint = proxy.ownEndpoints.default = proxy.context.createBiquadFilter();
                     endPoint.type = FilterTypeValue[params.type.toString()];
                     endPoint.frequency.value = params.frequency || 1000;
                     endPoint.Q.value = params.Q || 1;

@@ -12,7 +12,7 @@ export default {
         let clearRect = { x: 0, y: 0, w: w, h: h };
         let clearStyle = "";
 
-        const analyzerEndPoint = proxy.audioEndpoints.default
+        const analyzerEndPoint = proxy.ownEndpoints.default
 
         const waveform = new Float32Array(analyzerEndPoint.frequencyBinCount);
         
@@ -53,13 +53,9 @@ export default {
         
         var freqData = new Uint8Array(analyzerEndPoint.frequencyBinCount);
         
-        const updateFrequencyData = () => {
-            requestAnimationFrame(updateFrequencyData);
-            analyzerEndPoint.getByteFrequencyData(freqData);
-        }
         const drawBarGraph = () => {
 
-            requestAnimationFrame(drawBarGraph);
+            analyzerEndPoint.getByteFrequencyData(freqData);
 
             ctx.fillStyle = clearStyle;
             ctx.fillRect(0, 0, w, h);
@@ -91,9 +87,6 @@ export default {
             const colMargin = colWidth * 0;
             const barWidth = colWidth * 1;
             
-            //console.clear();
-
-            //let gotdata = false;
 
             for(let i = 0; i < analyzerEndPoint.fftSize / 2; i++) {
 
@@ -125,13 +118,10 @@ export default {
                 
             }
 
-            // if(gotdata){
-            //      debugger;
-            // }
+            requestAnimationFrame(drawBarGraph);
             
         }
         
-        updateFrequencyData();
         drawBarGraph();
 
     }

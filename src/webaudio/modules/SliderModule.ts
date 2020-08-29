@@ -11,7 +11,7 @@ class SliderModule extends BaseAudioGraphNodeModule {
         
         super(target, audioContext, params, {
 
-            init: async () => {
+            init: () => {
                 return new Promise(resolve => {
 
                     if(proxy.uiInitialized){
@@ -49,7 +49,7 @@ class SliderModule extends BaseAudioGraphNodeModule {
 
             },
             
-            start: (time:number) => {
+            start: (time:number, options?: any) => {
                 
                 const currentValue = params.inputRef.current.valueAsNumber;
 

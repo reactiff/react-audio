@@ -1,45 +1,34 @@
 import React from 'react';
-
 import DynamicCompressorModule from './modules/DynamicCompressorModule';
-import renderChildren from './renderChildren';
 import paramsFromProps from './paramsFromProps';
 
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
+
 type DynamicCompressorPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
-    
     enabled?: boolean
 }
 
 export default (props: DynamicCompressorPropsType) => {
 
-    let children = null;
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
 
-    if(props.context){
-        
-        const proxy = new DynamicCompressorModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
+    const [proxy] = React.useState(new DynamicCompressorModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        proxy.target.registerSource(proxy);
-
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
     return (
-        <div className="filter">
-            {children}
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="compressor">
+                {props.children}
+            </div>    
+        </parentContext.Provider>
+        
     );
 }

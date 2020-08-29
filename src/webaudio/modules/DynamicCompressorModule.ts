@@ -7,9 +7,10 @@ class DynamicCompressorModule extends BaseAudioGraphNodeModule {
         let proxy: any = null;
 
         super(target, audioContext, params, {
-            init: async () => {
+            init: (options?: any) => {
 
                 return new Promise(resolve => {
+                    
                     if(!params.enabled){
                         resolve();
                         return;
@@ -18,7 +19,7 @@ class DynamicCompressorModule extends BaseAudioGraphNodeModule {
                     const time = proxy.context.currentTime;
 
                     // Create a compressor node
-                    const compressor = proxy.audioEndpoints.default = proxy.context.createDynamicsCompressor();
+                    const compressor = proxy.ownEndpoints.default = proxy.context.createDynamicsCompressor();
                     compressor.threshold.setValueAtTime(-50, time);
                     compressor.knee.setValueAtTime(40, time);
                     compressor.ratio.setValueAtTime(12, time);

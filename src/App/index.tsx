@@ -60,7 +60,7 @@ export default (props: any) => {
         ref={bottomNavBarRef} 
         location={props.location} 
         routes={{
-          test: { icon: 'flask', path: '/test', exact: true },
+          racks: { icon: 'flask', path: '/racks', exact: true },
           home: { icon: 'home', path: '/', exact: true },
           synth: { icon: 'flask', path: '/synth', exact: true },
           song: { icon: 'flask', path: '/song', exact: true },

@@ -1,48 +1,34 @@
 import React from 'react';
-
 import StereoModule from './modules/StereoModule';
-import renderChildren from './renderChildren'
 import paramsFromProps from './paramsFromProps'
 
-import './css/gain.css'
-
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
 type StereoPropsType = {
-
-    //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
-    //component specific
     pan?: number, //0 -1 to 1
-    
 }
 
 export default (props: StereoPropsType) => {
 
-    let children = null;
-
-    if(props.context){
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
         
-        const proxy = new StereoModule(
-            props.target,
-            props.context,
-            paramsFromProps(props)
-        );
+    const [proxy] = React.useState(new StereoModule(
+        target,
+        context,
+        paramsFromProps(props)
+    ));
 
-        props.target.registerSource(proxy);
-        
-        children = renderChildren(props.children, {
-            context: props.context,
-            target: proxy
-        })   
-
-    }
+    target.registerSource(proxy);
     
     return (
-        <div className="stereo">
-            {children}
-        </div>
+        <parentContext.Provider value={proxy}>
+            <div className="stereo">
+                {props.children}
+            </div>    
+        </parentContext.Provider>
+        
     );
 }

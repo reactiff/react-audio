@@ -1,5 +1,5 @@
 import BaseAudioGraphNodeModule from './BaseAudioGraphNodeModule';
-
+import Log from './Log';
 import WaveGraph from './analyzergraphs/WaveGraph'
 import BarGraph from './analyzergraphs/BarGraph'
 import ScatterGraph from './analyzergraphs/ScatterGraph'
@@ -11,6 +11,8 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
     dumped: boolean;
     analyzers: any;
 
+    animationRequestId: number;
+
     constructor(target: any, audioContext: any, params: any) {
 
         let proxy: any = null;
@@ -18,25 +20,17 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
         super(target, audioContext, params, {
 
             //Analyzer
-            init: async () => {
+            init: (options?: any | null) => {
                 return new Promise((resolve)=>{
 
-                    if (this.uiInitialized) {
-                        resolve();
-                        return;
-                    }
-
-                    this.uiInitialized = true;
-                    
-
                     //todo create two analyzers for scatter type
-                    proxy.audioEndpoints['default'] = proxy.context.createAnalyser();
+                    proxy.ownEndpoints['default'] = proxy.context.createAnalyser();
 
                     if(params.type==='scatter'){
-                        proxy.audioEndpoints['secondary'] = proxy.context.createAnalyser();
+                        proxy.ownEndpoints['secondary'] = proxy.context.createAnalyser();
                         proxy.analyzers = {
-                            x: proxy.audioEndpoints['default'],
-                            y: proxy.audioEndpoints['secondary']
+                            x: proxy.ownEndpoints['default'],
+                            y: proxy.ownEndpoints['secondary']
                         }
                     }
 
@@ -47,12 +41,12 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
             }
         });
 
+        this.animationRequestId = 0;
+
         this.uiInitialized = false;
         this.analyzers = {};
         this.animating = true;
         this.dumped = false;
-
-        this.staticEndpoints = true;
 
         this.$type = 'Analyzer';
 
@@ -67,12 +61,23 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
 
         return new Promise(async (resolve) => {
 
+            if (thisModule.inputSources.hasOwnProperty(source.id)) {
+
+                // make sure that the source doesn't have any new endpoints
+                debugger;
+
+                resolve();
+                return;
+            }
+
             if(thisModule.$params.type==='scatter'){
                 
                 //two inputs
 
-                for(let input of source.inputSources){
+                for(let i of Object.values(source.inputSources)){
 
+                    const input = (i as BaseAudioGraphNodeModule);
+                    
                     if(input.$params.id === thisModule.$params.x || input.$params.id === thisModule.$params.y){
 
                         const inputEndpoints = input.getEndPoints();
@@ -87,8 +92,11 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
                             boundEndpoint = thisModule.analyzers.y;
                         }
         
+                        let cnt=0;
                         for(let ep of inputEndpoints){
+                            Log.write(' connect ' + source + '.' + cnt + ' -- to --> ' + thisModule.getDescription());
                             ep.connect(boundEndpoint);
+                            cnt++;
                         }
 
                     }
@@ -96,8 +104,10 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
             }
             else{
                 const inputEndpoints = source.getEndPoints();
+                let cnt=0;
                 for(let inputSignal of inputEndpoints){
-                    inputSignal.connect(thisModule.audioEndpoints.default);
+                    Log.write(' connect ' + source + '.' + cnt + ' -- to --> ' + thisModule.getDescription());
+                    inputSignal.connect(thisModule.ownEndpoints.default);
                 }
             }
 
@@ -105,22 +115,7 @@ class AnalyzerModule extends BaseAudioGraphNodeModule {
         });
     }
 
-    getAnalyzerEndPoint() {
-        return this.audioEndpoints['default'];
-    }
-
     initDrawing() {
-
-        
-        
-        // if(this.$params.onClick){
-        //     this.$params.canvasRef.current.addEventListener('click', (e:any) => {
-        //         this.$params.onClick(this)
-        //         e.preventDefault();
-        //         return false;
-        //     } );
-        // }
-
         if(this.$params.type === 'wave'){
             WaveGraph.init(this);
         }

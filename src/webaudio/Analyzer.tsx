@@ -1,60 +1,59 @@
-import React, { ReactElement, useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import paramsFromProps from './paramsFromProps'
+import audioContext from './Context/audioContext';
+import parentContext from './Context/parentContext';
 
 import AnalyzerModule from './modules/AnalyzerModule';
-
-import paramsFromProps from './paramsFromProps'
-  
 import './css/analyzer.css'
 
 type AnalyzerType = {
-
     //standard props
     children?: any,
-    context?: AudioContext,
-    target?: any,
-
     //specific
-    type: any
-
+    type?: any
     x?: string,
     y?: string,
-
     margin?: number
     width?: number
     height?: number
-
     dcOffset?: number
     scale?: number
-
     rotate90?: boolean
     sizeX?: number
     sizeY?: number
     traces?: boolean
     color?: string
-
+    aspect?: null
     onClick?: (analyzer: any) => void
 }
 
 const paramDefaults = {
     traces: false,
     rotate90: false,
-    color: "white"
+    aspect: 1 / 16 * 9,
+    type: 'wave',
 }
 
 export default (props: AnalyzerType) => {
 
+    const context = React.useContext(audioContext);
+    const target = React.useContext(parentContext);
     const proxy = useRef<any>();
     const canvasRef = useRef();
-
     const containerRef: any = React.createRef();
-    
     const [canvasProps, setCanvasProps] = useState<any>();
-    
+
+    const pp = paramsFromProps(props, {}, paramDefaults);
+
     useEffect(() => {
 
         if (containerRef.current && !canvasProps) {
             const rect = containerRef.current.getBoundingClientRect();
             if (rect) {
+                if (props.aspect) {
+                    rect.height = rect.width * props.aspect;
+                    containerRef.current.style.height = rect.height + 'px';
+                }
                 const temp = { 
                     style: {
                         width: rect.width,
@@ -70,20 +69,20 @@ export default (props: AnalyzerType) => {
 
         if (canvasRef.current && !proxy.current && canvasProps) {
             proxy.current = new AnalyzerModule(
-                props.target,
-                props.context,
+                target,
+                context,
                 paramsFromProps(props, {canvasRef, ...canvasProps}, paramDefaults),
             )
-            props.target.registerListener(proxy.current);
+            target.registerListener(proxy.current);
         }
 
     }, [containerRef.current, canvasRef.current, proxy.current, canvasProps]);
 
     return (
-        <div ref={containerRef} className="analyzer-container">
-            {
-                <canvas ref={canvasRef} className="analyzer-canvas" {...canvasProps} />
-            }
-        </div>
+        <parentContext.Provider value={proxy.current}>
+            <div ref={containerRef} className="analyzer">
+                <canvas ref={canvasRef} className="analyzer-canvas fill" {...canvasProps} />
+            </div>
+        </parentContext.Provider>
     );
 }
